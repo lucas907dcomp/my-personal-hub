@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Performance Hub v2.0 - ERP Integrado</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.4); }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); }
+        .gym-gradient { background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); }
+        .custom-scrollbar::-webkit-scrollbar { display: none; }
+        .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="pb-20">
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    const Icon = ({ name, size = 20, className = "" }) => {
+        const icons = {
+            dumbbell: <path d="M6.5 6.5h11v11h-11z M4 9h16v6H4z M2 11h20v2H2z M8 4v16M16 4v16"/>,
+            plus: <path d="M12 5v14M5 12h14"/>,
+            trash: <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>,
+            trendingUp: <path d="M23 6l-9.5 9.5-5-5L1 18M17 6h6v6"/>,
+            check: <path d="M20 6L9 17l-5-5"/>,
+            settings: <React.Fragment><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></React.Fragment>,
+            target: <React.Fragment><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></React.Fragment>
+        };
+        return (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {icons[name]}
+            </svg>
+        );
+    };
+
+    const App = () => {
+        const [workouts, setWorkouts] = useState([]);
+        const [exercises, setExercises] = useState([]);
+        const [activeWorkoutId, setActiveWorkoutId] = useState(null);
+
+        const [healthGoals, setHealthGoals] = useState({ whey: false, creatina: false });
+
+        const [isAddingExercise, setIsAddingExercise] = useState(false);
+        const [isManagingWorkouts, setIsManagingWorkouts] = useState(false);
+        const [newExercise, setNewExercise] = useState({ name: '', weight: '', reps: '', rpe: '8' });
+        const [newWorkoutName, setNewWorkoutName] = useState('');
+
+        // --- BUSCAR DADOS DO BACKEND ---
+        useEffect(() => {
+            const fetchAllData = async () => {
+                try {
+                    const wRes = await fetch('/api/gym/workouts');
+                    if(wRes.ok) {
+                        const wData = await wRes.json();
+                        setWorkouts(wData);
+                        if(wData.length > 0) setActiveWorkoutId(wData[0].id);
+                    }
+
+                    const eRes = await fetch('/api/gym/exercises');
+                    if(eRes.ok) setExercises(await eRes.json());
+
+                    const sRes = await fetch('/api/gym/supplements');
+                    if(sRes.ok) {
+                        const sData = await sRes.json();
+                        setHealthGoals({ whey: sData.whey, creatina: sData.creatina });
+                    }
+                } catch (error) { console.error("Erro ao carregar do Java", error); }
+            };
+            fetchAllData();
+        }, []);
+
+        const currentExercises = useMemo(() => {
+            return exercises.filter(e => e.workoutId === activeWorkoutId);
+        }, [exercises, activeWorkoutId]);
+
+        // --- AÇÕES DE SUPLEMENTOS ---
+        const toggleSupplement = async (key) => {
+            const updatedGoals = { ...healthGoals, [key]: !healthGoals[key] };
+            setHealthGoals(updatedGoals); // Atualiza tela
+            try {
+                await fetch('/api/gym/supplements', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedGoals)
+                });
+            } catch (error) { console.error("Erro ao salvar suplemento", error); }
+        };
+
+        // --- AÇÕES DE TREINOS (WORKOUTS) ---
+        const handleAddWorkout = async () => {
+            if (!newWorkoutName) return;
+            try {
+                const res = await fetch('/api/gym/workouts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newWorkoutName })
+                });
+                const savedWorkout = await res.json();
+                setWorkouts([...workouts, savedWorkout]);
+                setActiveWorkoutId(savedWorkout.id);
+                setNewWorkoutName('');
+            } catch (error) { console.error("Erro ao salvar treino", error); }
+        };
+
+        const deleteWorkout = async (id) => {
+            if(workouts.length <= 1) {
+                alert("Você não pode deletar o seu último treino.");
+                return;
+            }
+
+            try {
+                await fetch(`/api/gym/workouts/${id}`, { method: 'DELETE' });
+
+                const newWorkouts = workouts.filter(w => w.id !== id);
+                setWorkouts(newWorkouts);
+                setExercises(exercises.filter(e => e.workoutId !== id));
+                if(activeWorkoutId === id) setActiveWorkoutId(newWorkouts[0].id);
+            } catch (error) { console.error("Erro ao deletar treino", error); }
+        };
+
+        // --- AÇÕES DE EXERCÍCIOS ---
+        const handleAddExercise = async (e) => {
+            e.preventDefault();
+            if (!newExercise.name || !activeWorkoutId) return;
+
+            const payload = {
+                workoutId: activeWorkoutId,
+                name: newExercise.name,
+                weight: Number(newExercise.weight),
+                reps: newExercise.reps,
+                rpe: Number(newExercise.rpe),
+                canIncreaseNext: false
+            };
+
+            try {
+                const res = await fetch('/api/gym/exercises', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const savedExercise = await res.json();
+                setExercises([...exercises, savedExercise]);
+                setNewExercise({ name: '', weight: '', reps: '', rpe: '8' });
+                setIsAddingExercise(false);
+            } catch (error) { console.error("Erro ao adicionar exercício", error); }
+        };
+
+        const deleteExercise = async (id) => {
+            try {
+                await fetch(`/api/gym/exercises/${id}`, { method: 'DELETE' });
+                setExercises(exercises.filter(ex => ex.id !== id));
+            } catch (error) { console.error("Erro ao deletar exercício", error); }
+        };
+
+        // ATUALIZAÇÃO OTIMISTA: Muda na tela na hora, salva no banco silenciosamente
+        const handleLocalChange = (id, field, value) => {
+            setExercises(exercises.map(ex => ex.id === id ? { ...ex, [field]: value } : ex));
+        };
+
+        // Chamado no 'onBlur' dos inputs de texto/número
+        const saveExerciseToDb = async (id) => {
+            const ex = exercises.find(e => e.id === id);
+            if(!ex) return;
+            try {
+                await fetch(`/api/gym/exercises/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ex)
+                });
+            } catch (error) { console.error("Erro ao sincronizar exercício", error); }
+        };
+
+        // Botão de Progressão também salva direto
+        const toggleIncreaseLoad = async (id) => {
+            const ex = exercises.find(e => e.id === id);
+            const newValue = !ex.canIncreaseNext;
+
+            handleLocalChange(id, 'canIncreaseNext', newValue);
+            try {
+                await fetch(`/api/gym/exercises/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...ex, canIncreaseNext: newValue })
+                });
+            } catch (error) { console.error("Erro ao salvar progressão", error); }
+        };
+
+        return (
+            <div className="max-w-md mx-auto min-h-screen bg-slate-50 relative lg:max-w-3xl">
+                <header className="gym-gradient text-white p-6 rounded-b-[2.5rem] shadow-lg">
+                    <div className="flex justify-between items-center mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+                                <Icon name="dumbbell" size={28} />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-black uppercase tracking-tight italic">Gym Hub</h1>
+                                <p className="text-white/70 text-xs font-medium uppercase tracking-widest">Performance & Data</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setIsManagingWorkouts(!isManagingWorkouts)} className="bg-white/10 p-3 rounded-xl hover:bg-white/20 transition">
+                            <Icon name="settings" size={20} />
+                        </button>
+                    </div>
+
+                    <div className="bg-white/10 p-4 rounded-2xl border border-white/20 backdrop-blur-md">
+                        <h2 className="text-[10px] font-black uppercase tracking-widest text-white/90 mb-3 flex items-center gap-1">
+                            <Icon name="target" size={14} /> Suplementação Diária
+                        </h2>
+                        <div className="flex justify-between gap-3">
+                            <button
+                                onClick={() => toggleSupplement('whey')}
+                                className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all border ${healthGoals.whey ? 'bg-emerald-500 border-emerald-400 text-white shadow-inner scale-[0.98]' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'}`}
+                            >
+                                Whey Protein
+                            </button>
+                            <button
+                                onClick={() => toggleSupplement('creatina')}
+                                className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all border ${healthGoals.creatina ? 'bg-emerald-500 border-emerald-400 text-white shadow-inner scale-[0.98]' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'}`}
+                            >
+                                Creatina
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="p-4 space-y-6 mt-2">
+                    {isManagingWorkouts && (
+                        <div className="bg-white p-6 rounded-3xl card-shadow border border-slate-100 transition-all">
+                            <h3 className="text-sm font-black text-slate-800 uppercase mb-4 tracking-tighter">Gerenciar Divisão de Treino</h3>
+                            <div className="space-y-3 mb-4">
+                                {workouts.map(w => (
+                                    <div key={w.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <span className="font-bold text-slate-700 text-sm">{w.name}</span>
+                                        <button onClick={() => deleteWorkout(w.id)} className="text-slate-400 hover:text-red-500 transition-colors p-2 bg-white rounded-lg shadow-sm">
+                                            <Icon name="trash" size={16} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Ex: Treino D (Core)"
+                                    value={newWorkoutName}
+                                    onChange={(e) => setNewWorkoutName(e.target.value)}
+                                    className="flex-1 bg-slate-100 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                                />
+                                <button onClick={handleAddWorkout} className="bg-orange-500 text-white px-5 py-3 rounded-xl font-bold hover:bg-orange-600 transition-all">
+                                    <Icon name="plus" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2 pt-2 snap-x">
+                        {workouts.map(w => (
+                            <button
+                                key={w.id}
+                                onClick={() => setActiveWorkoutId(w.id)}
+                                className={`snap-start whitespace-nowrap px-6 py-4 rounded-2xl font-black text-sm tracking-tighter uppercase transition-all flex-shrink-0 border-2 ${activeWorkoutId === w.id ? 'bg-slate-900 text-white border-slate-900 shadow-lg scale-105' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
+                            >
+                                {w.name}
+                            </button>
+                        ))}
+                        {workouts.length === 0 && <span className="text-sm font-bold text-slate-400 py-4 px-2">Crie um treino em 'Configurações'</span>}
+                    </div>
+
+                    {workouts.length > 0 && (
+                        <div className="space-y-5">
+                            {currentExercises.length === 0 ? (
+                                <div className="text-center p-12 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+                                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                        <Icon name="dumbbell" size={32} />
+                                    </div>
+                                    <p className="text-slate-500 font-medium">Nenhum exercício neste treino.</p>
+                                    <p className="text-slate-400 text-xs mt-1">Clique abaixo para adicionar.</p>
+                                </div>
+                            ) : (
+                                currentExercises.map(ex => (
+                                    <div key={ex.id} className="bg-white p-6 rounded-3xl card-shadow border border-slate-100 relative overflow-hidden transition-all hover:border-slate-200">
+                                        {ex.canIncreaseNext && <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>}
+
+                                        <div className="flex justify-between items-start mb-5 pl-2">
+                                            <h4 className="font-black text-slate-800 text-lg uppercase tracking-tight">{ex.name}</h4>
+                                            <button onClick={() => deleteExercise(ex.id)} className="text-slate-300 hover:text-red-500 transition-colors bg-slate-50 p-2 rounded-lg">
+                                                <Icon name="trash" size={16}/>
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-3 mb-5 pl-2">
+                                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100 transition-all">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Carga</label>
+                                                <div className="flex items-end gap-1">
+                                                    <input
+                                                        type="number"
+                                                        value={ex.weight}
+                                                        onChange={(e) => handleLocalChange(ex.id, 'weight', e.target.value)}
+                                                        onBlur={() => saveExerciseToDb(ex.id)}
+                                                        className="w-full bg-transparent text-slate-800 font-black text-2xl focus:outline-none"
+                                                    />
+                                                    <span className="text-xs font-bold text-slate-400 mb-1">kg</span>
+                                                </div>
+                                            </div>
+                                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Reps</label>
+                                                <input
+                                                    type="text"
+                                                    value={ex.reps}
+                                                    onChange={(e) => handleLocalChange(ex.id, 'reps', e.target.value)}
+                                                    onBlur={() => saveExerciseToDb(ex.id)}
+                                                    className="w-full bg-transparent text-slate-800 font-black text-xl lg:text-2xl focus:outline-none"
+                                                />
+                                            </div>
+                                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 focus-within:border-purple-300 focus-within:ring-2 focus-within:ring-purple-100 transition-all">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">RPE</label>
+                                                <input
+                                                    type="number"
+                                                    min="1" max="10"
+                                                    value={ex.rpe}
+                                                    onChange={(e) => handleLocalChange(ex.id, 'rpe', e.target.value)}
+                                                    onBlur={() => saveExerciseToDb(ex.id)}
+                                                    className="w-full bg-transparent text-slate-800 font-black text-2xl focus:outline-none"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="pl-2">
+                                            <button
+                                                onClick={() => toggleIncreaseLoad(ex.id)}
+                                                className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${ex.canIncreaseNext ? 'bg-emerald-500 text-white shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)]' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                                            >
+                                                {ex.canIncreaseNext ? <Icon name="check" size={18} /> : <Icon name="trendingUp" size={18} />}
+                                                {ex.canIncreaseNext ? 'Carga sobe no próximo' : 'Progredir no próximo treino?'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+
+                    {workouts.length > 0 && !isAddingExercise && (
+                        <button
+                            onClick={() => setIsAddingExercise(true)}
+                            className="w-full py-5 mt-4 border-2 border-dashed border-slate-300 text-slate-500 rounded-3xl font-black uppercase text-sm tracking-widest flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-slate-400 transition-all"
+                        >
+                            <Icon name="plus" /> Novo Exercício
+                        </button>
+                    )}
+
+                    {isAddingExercise && (
+                        <form onSubmit={handleAddExercise} className="bg-white p-6 rounded-3xl card-shadow border border-slate-200 mt-4">
+                            <h4 className="font-black text-slate-800 mb-5 uppercase tracking-tighter">Cadastrar Equipamento</h4>
+                            <div className="space-y-4 mb-5">
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Nome do Exercício</label>
+                                    <input required type="text" placeholder="Ex: Supino Inclinado c/ Halteres" value={newExercise.name} onChange={e => setNewExercise({...newExercise, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-sm font-bold focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all" />
+                                </div>
+                                <div className="flex gap-3">
+                                    <div className="w-1/3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Carga (kg)</label>
+                                        <input required type="number" placeholder="Kg" value={newExercise.weight} onChange={e => setNewExercise({...newExercise, weight: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-sm font-bold focus:outline-none focus:border-orange-400 transition-all" />
+                                    </div>
+                                    <div className="w-1/3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Séries x Reps</label>
+                                        <input required type="text" placeholder="Ex: 3x10" value={newExercise.reps} onChange={e => setNewExercise({...newExercise, reps: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-sm font-bold focus:outline-none focus:border-orange-400 transition-all" />
+                                    </div>
+                                    <div className="w-1/3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Esforço (RPE)</label>
+                                        <input required type="number" min="1" max="10" placeholder="RPE" value={newExercise.rpe} onChange={e => setNewExercise({...newExercise, rpe: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-sm font-bold focus:outline-none focus:border-orange-400 transition-all" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex gap-3">
+                                <button type="button" onClick={() => setIsAddingExercise(false)} className="flex-1 py-4 text-slate-500 font-black uppercase text-xs tracking-widest bg-slate-100 rounded-2xl hover:bg-slate-200 transition-all">Cancelar</button>
+                                <button type="submit" className="flex-1 py-4 text-white font-black uppercase text-xs tracking-widest gym-gradient rounded-2xl shadow-lg hover:brightness-110 transition-all">Salvar</button>
+                            </div>
+                        </form>
+                    )}
+                </main>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>
