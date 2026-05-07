@@ -1,7 +1,11 @@
 package com.lucas.erp.productivity;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,64 +16,51 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductivityController {
 
-    private final TaskRepository taskRepository;
-    private final NoteRepository noteRepository;
+    private final ProductivityService productivityService;
 
-    // ==========================================
-    // ENDPOINTS DE TAREFAS (ROTINA)
-    // ==========================================
+    private UUID userId(Jwt jwt) {
+        return UUID.fromString(jwt.getSubject());
+    }
 
     @GetMapping("/tasks")
-    public List<RoutineTask> getTasks() {
-        return taskRepository.findAllByOrderByTimeAsc();
+    public List<RoutineTask> getTasks(@AuthenticationPrincipal Jwt jwt) {
+        return productivityService.getTasks(userId(jwt));
     }
 
     @PostMapping("/tasks")
-    public RoutineTask addTask(@RequestBody RoutineTask task) {
-        return taskRepository.save(task);
+    @ResponseStatus(HttpStatus.CREATED)
+    public RoutineTask addTask(@AuthenticationPrincipal Jwt jwt,
+                               @Valid @RequestBody RoutineTask task) {
+        return productivityService.addTask(userId(jwt), task);
     }
 
     @DeleteMapping("/tasks/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
-        taskRepository.deleteById(id);
+    public ResponseEntity<Void> deleteTask(@AuthenticationPrincipal Jwt jwt,
+                                           @PathVariable UUID id) {
+        productivityService.deleteTask(userId(jwt), id);
         return ResponseEntity.noContent().build();
     }
 
-    // Marca a tarefa como concluída ou desfeita
     @PutMapping("/tasks/{id}/toggle")
-    public RoutineTask toggleTask(@PathVariable UUID id) {
-        RoutineTask task = taskRepository.findById(id).orElseThrow();
-        task.setDone(!task.getDone());
-        return taskRepository.save(task);
+    public RoutineTask toggleTask(@AuthenticationPrincipal Jwt jwt,
+                                  @PathVariable UUID id) {
+        return productivityService.toggleTask(userId(jwt), id);
     }
 
-    // O "Reset Diário" (Volta tudo para false)
     @PostMapping("/tasks/reset")
-    public ResponseEntity<Void> resetDailyRoutine() {
-        List<RoutineTask> allTasks = taskRepository.findAll();
-        allTasks.forEach(task -> task.setDone(false));
-        taskRepository.saveAll(allTasks);
+    public ResponseEntity<Void> resetDailyRoutine(@AuthenticationPrincipal Jwt jwt) {
+        productivityService.resetDailyRoutine(userId(jwt));
         return ResponseEntity.ok().build();
     }
 
-    // ==========================================
-    // ENDPOINTS DO RASCUNHO (NOTAS)
-    // ==========================================
-
     @GetMapping("/notes")
-    public WorkspaceNote getNote() {
-        // Se não existir, cria a nota número 1 em branco
-        return noteRepository.findById(1).orElseGet(() -> {
-            WorkspaceNote newNote = new WorkspaceNote();
-            newNote.setContent("");
-            return noteRepository.save(newNote);
-        });
+    public WorkspaceNote getNote(@AuthenticationPrincipal Jwt jwt) {
+        return productivityService.getNote(userId(jwt));
     }
 
     @PutMapping("/notes")
-    public WorkspaceNote updateNote(@RequestBody WorkspaceNote noteAtualizada) {
-        WorkspaceNote note = noteRepository.findById(1).orElse(new WorkspaceNote());
-        note.setContent(noteAtualizada.getContent());
-        return noteRepository.save(note);
+    public WorkspaceNote updateNote(@AuthenticationPrincipal Jwt jwt,
+                                    @RequestBody WorkspaceNote noteAtualizada) {
+        return productivityService.updateNote(userId(jwt), noteAtualizada);
     }
 }

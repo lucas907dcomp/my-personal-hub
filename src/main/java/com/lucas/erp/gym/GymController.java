@@ -1,8 +1,12 @@
 package com.lucas.erp.gym;
 
+import com.lucas.erp.gym.dto.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,72 +17,71 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class GymController {
 
-    private final WorkoutRepository workoutRepository;
-    private final ExerciseRepository exerciseRepository;
-    private final SupplementRepository supplementRepository;
+    private final GymService gymService;
+
+    private UUID userId(Jwt jwt) {
+        return UUID.fromString(jwt.getSubject());
+    }
 
     // --- WORKOUTS ---
+
     @GetMapping("/workouts")
-    public List<Workout> getWorkouts() {
-        return workoutRepository.findAll();
+    public List<WorkoutDTO> getWorkouts(@AuthenticationPrincipal Jwt jwt) {
+        return gymService.getWorkouts(userId(jwt));
     }
 
     @PostMapping("/workouts")
-    public Workout addWorkout(@RequestBody Workout workout) {
-        return workoutRepository.save(workout);
+    @ResponseStatus(HttpStatus.CREATED)
+    public WorkoutDTO addWorkout(@AuthenticationPrincipal Jwt jwt,
+                                 @Valid @RequestBody CreateWorkoutRequest req) {
+        return gymService.createWorkout(userId(jwt), req);
     }
 
     @DeleteMapping("/workouts/{id}")
-    @Transactional // Garante que se der erro ao deletar os exercícios, o treino não é deletado (ACID)
-    public ResponseEntity<Void> deleteWorkout(@PathVariable UUID id) {
-        exerciseRepository.deleteByWorkoutId(id);
-        workoutRepository.deleteById(id);
+    public ResponseEntity<Void> deleteWorkout(@AuthenticationPrincipal Jwt jwt,
+                                              @PathVariable UUID id) {
+        gymService.deleteWorkout(userId(jwt), id);
         return ResponseEntity.noContent().build();
     }
 
     // --- EXERCISES ---
+
     @GetMapping("/exercises")
-    public List<Exercise> getAllExercises() {
-        return exerciseRepository.findAll();
+    public List<ExerciseDTO> getAllExercises(@AuthenticationPrincipal Jwt jwt) {
+        return gymService.getExercises(userId(jwt));
     }
 
     @PostMapping("/exercises")
-    public Exercise addExercise(@RequestBody Exercise exercise) {
-        return exerciseRepository.save(exercise);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ExerciseDTO addExercise(@AuthenticationPrincipal Jwt jwt,
+                                   @Valid @RequestBody CreateExerciseRequest req) {
+        return gymService.createExercise(userId(jwt), req);
     }
 
     @PutMapping("/exercises/{id}")
-    public Exercise updateExercise(@PathVariable UUID id, @RequestBody Exercise updatedData) {
-        Exercise exercise = exerciseRepository.findById(id).orElseThrow();
-        // Atualiza apenas os campos permitidos
-        if (updatedData.getWeight() != null) exercise.setWeight(updatedData.getWeight());
-        if (updatedData.getReps() != null) exercise.setReps(updatedData.getReps());
-        if (updatedData.getRpe() != null) exercise.setRpe(updatedData.getRpe());
-        if (updatedData.getCanIncreaseNext() != null) exercise.setCanIncreaseNext(updatedData.getCanIncreaseNext());
-
-        return exerciseRepository.save(exercise);
+    public ExerciseDTO updateExercise(@AuthenticationPrincipal Jwt jwt,
+                                      @PathVariable UUID id,
+                                      @RequestBody UpdateExerciseRequest req) {
+        return gymService.updateExercise(userId(jwt), id, req);
     }
 
     @DeleteMapping("/exercises/{id}")
-    public ResponseEntity<Void> deleteExercise(@PathVariable UUID id) {
-        exerciseRepository.deleteById(id);
+    public ResponseEntity<Void> deleteExercise(@AuthenticationPrincipal Jwt jwt,
+                                               @PathVariable UUID id) {
+        gymService.deleteExercise(userId(jwt), id);
         return ResponseEntity.noContent().build();
     }
 
     // --- SUPPLEMENTS ---
+
     @GetMapping("/supplements")
-    public SupplementGoal getSupplements() {
-        return supplementRepository.findById(1).orElseGet(() -> {
-            SupplementGoal sg = new SupplementGoal();
-            return supplementRepository.save(sg);
-        });
+    public SupplementGoalDTO getSupplements(@AuthenticationPrincipal Jwt jwt) {
+        return gymService.getSupplements(userId(jwt));
     }
 
     @PutMapping("/supplements")
-    public SupplementGoal updateSupplements(@RequestBody SupplementGoal data) {
-        SupplementGoal sg = supplementRepository.findById(1).orElse(new SupplementGoal());
-        sg.setWhey(data.getWhey());
-        sg.setCreatina(data.getCreatina());
-        return supplementRepository.save(sg);
+    public SupplementGoalDTO updateSupplements(@AuthenticationPrincipal Jwt jwt,
+                                               @RequestBody SupplementGoalDTO data) {
+        return gymService.saveSupplements(userId(jwt), data);
     }
 }

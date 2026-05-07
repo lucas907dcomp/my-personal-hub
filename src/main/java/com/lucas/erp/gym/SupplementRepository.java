@@ -1,3 +1,7 @@
 package com.lucas.erp.gym;
+
 import org.springframework.data.jpa.repository.JpaRepository;
-public interface SupplementRepository extends JpaRepository<SupplementGoal, Integer> {}
+import java.util.UUID;
+
+public interface SupplementRepository extends JpaRepository<SupplementGoal, UUID> {
+}

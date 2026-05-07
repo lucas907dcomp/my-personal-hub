@@ -2,13 +2,15 @@ package com.lucas.erp.gym;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 @Entity
 @Table(name = "tb_gym_supplements")
 public class SupplementGoal {
     @Id
-    private Integer id = 1; // Registro único para o MVP
+    @Column(name = "user_id")
+    private UUID userId;
 
     private Boolean whey = false;
     private Boolean creatina = false;

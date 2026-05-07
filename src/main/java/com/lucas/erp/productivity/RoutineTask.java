@@ -1,6 +1,7 @@
 package com.lucas.erp.productivity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import java.util.UUID;
 
@@ -13,8 +14,12 @@ public class RoutineTask {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
+    @NotBlank
     private String title;
-    private String time; // Ex: "07:15"
+    private String time;
     private Boolean done = false;
-    private String type; // Ex: "health", "study"
+    private String type;
 }

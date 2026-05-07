@@ -2,7 +2,7 @@
 story_id: STORY-002
 epic_id: EPIC-001
 title: "Sprint 1 — Authentication + Backend Refactor"
-status: Ready
+status: InProgress
 priority: CRITICAL
 sprint: 1
 executor: "@dev"
@@ -41,72 +41,72 @@ Before Sprint 1 planning is finalized, Lucas must resolve:
 ## Acceptance Criteria
 
 ### AC-1: Service layer extracted (S1.1)
-- [ ] `GymService` extracted from `GymController` — controllers contain only HTTP mapping logic
-- [ ] All business logic lives in `GymService`
-- [ ] `@Autowired` of repository removed from controller
+- [x] `GymService` extracted from `GymController` — controllers contain only HTTP mapping logic
+- [x] All business logic lives in `GymService`
+- [x] `@Autowired` of repository removed from controller
 
 ### AC-2: DTO layer added (S1.2)
-- [ ] `WorkoutDTO`, `ExerciseDTO`, `SupplementDTO` created
-- [ ] Controllers return DTOs — JPA entities never exposed directly in responses
-- [ ] MapStruct or manual mapping (no Lombok on DTOs to avoid circular issues)
+- [x] `WorkoutDTO`, `ExerciseDTO`, `SupplementDTO` created
+- [x] Controllers return DTOs — JPA entities never exposed directly in responses
+- [x] MapStruct or manual mapping (no Lombok on DTOs to avoid circular issues)
 
 ### AC-3: Exercise JPA relationship migrated (S1.3)
-- [ ] `Exercise.workoutId` field removed
-- [ ] `@ManyToOne(fetch = FetchType.LAZY)` + `@JoinColumn(name = "workout_id")` added
-- [ ] `@OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true)` on `Workout`
+- [x] `Exercise.workoutId` field removed
+- [x] `@ManyToOne(fetch = FetchType.LAZY)` + `@JoinColumn(name = "workout_id")` added
+- [x] `@OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true)` on `Workout`
 
 ### AC-4: Input validation added (S1.4)
-- [ ] `@Valid` on all controller method parameters
-- [ ] `@NotNull`, `@NotBlank`, `@Size`, `@Positive` constraint annotations on entity/DTO fields
-- [ ] `starter-validation` already imported — just needs annotations
+- [x] `@Valid` on all controller method parameters
+- [x] `@NotNull`, `@NotBlank`, `@Size`, `@Positive` constraint annotations on entity/DTO fields
+- [x] `starter-validation` already imported — just needs annotations
 
 ### AC-5: Global exception handler (S1.5)
-- [ ] `@ControllerAdvice` class created
-- [ ] Returns `ProblemDetail` (RFC 9457) — Spring 6 native, no custom error POJO needed
-- [ ] Handles: `MethodArgumentNotValidException` (400), `EntityNotFoundException` (404), generic `Exception` (500)
-- [ ] No stack traces in response body
+- [x] `@ControllerAdvice` class created
+- [x] Returns `ProblemDetail` (RFC 9457) — Spring 6 native, no custom error POJO needed
+- [x] Handles: `MethodArgumentNotValidException` (400), `EntityNotFoundException` (404), generic `Exception` (500)
+- [x] No stack traces in response body
 
 ### AC-6: Spring Security + JWT (S1.6/S1.7/S1.8)
-- [ ] `spring-boot-starter-security` + `spring-security-oauth2-resource-server` in `pom.xml`
-- [ ] `JwtAuthFilter` extracts `sub` claim from Supabase JWT → `UUID userId` in `SecurityContext`
-- [ ] `SecurityConfig` protects all `/api/**` — no endpoint accessible without valid JWT
-- [ ] `OPTIONS` requests permitted (CORS preflight)
-- [ ] Supabase JWKS URI configured: `spring.security.oauth2.resourceserver.jwt.jwk-set-uri`
+- [x] `spring-boot-starter-security` + `spring-security-oauth2-resource-server` in `pom.xml`
+- [x] `JwtAuthFilter` extracts `sub` claim from Supabase JWT → `UUID userId` in `SecurityContext`
+- [x] `SecurityConfig` protects all `/api/**` — no endpoint accessible without valid JWT
+- [x] `OPTIONS` requests permitted (CORS preflight)
+- [x] Supabase JWKS URI configured: `spring.security.oauth2.resourceserver.jwt.jwk-set-uri`
 
 ### AC-7: Repository-level userId filtering (S1.9)
-- [ ] Every repository method that returns data uses `findByUserId(UUID userId)` — never `findAll()`
-- [ ] `@AuthenticationPrincipal UUID userId` injected at controller, passed to service, used in repository
-- [ ] `GymController` + `GymService` updated for all Gym endpoints
-- [ ] `FuelController` + `FuelService` updated for all Fuel endpoints
-- [ ] `TaskController` + `TaskService` updated for all Task endpoints
-- [ ] ADR-006 pattern in effect: service role + application-layer filtering
+- [x] Every repository method that returns data uses `findByUserId(UUID userId)` — never `findAll()`
+- [x] `@AuthenticationPrincipal UUID userId` injected at controller, passed to service, used in repository
+- [x] `GymController` + `GymService` updated for all Gym endpoints
+- [x] `FuelController` + `FuelService` updated for all Fuel endpoints
+- [x] `TaskController` + `TaskService` updated for all Task endpoints
+- [x] ADR-006 pattern in effect: service role + application-layer filtering
 
 ### AC-8: Vite 5 scaffold (S1.10/S1.11)
-- [ ] `npm create vite@latest gym-hub -- --template react-ts` in project root
-- [ ] Tailwind CSS configured with custom design tokens from `docs/frontend/frontend-spec.md`
-- [ ] `tailwind.config.js` includes: `gym-gradient`, `slate` palette, glass morphism utility classes
-- [ ] Dev server runs: `npm run dev` → `http://localhost:5173`
+- [x] `npm create vite@latest gym-hub -- --template react-ts` in project root
+- [x] Tailwind CSS configured with custom design tokens from `docs/frontend/frontend-spec.md`
+- [x] `tailwind.config.js` includes: `gym-gradient`, `slate` palette, glass morphism utility classes
+- [x] Dev server runs: `npm run dev` → `http://localhost:5173`
 
 ### AC-9: Supabase client integrated (S1.12)
-- [ ] `@supabase/supabase-js` installed
-- [ ] `src/lib/supabaseClient.ts` singleton created
-- [ ] `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local`
+- [x] `@supabase/supabase-js` installed
+- [x] `src/lib/supabaseClient.ts` singleton created
+- [x] `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local`
 
 ### AC-10: Auth screens built (S1.13)
-- [ ] `LoginPage` component with email + password form
-- [ ] `SignupPage` component with email + password + confirm password
-- [ ] `AuthForm` organism shared between Login and Signup
-- [ ] All inputs use `text-base` (16px) — no iOS Safari viewport zoom (M-015)
-- [ ] Error messages displayed inline (wrong credentials, email already in use)
+- [x] `LoginPage` component with email + password form
+- [x] `SignupPage` component with email + password + confirm password
+- [x] `AuthForm` organism shared between Login and Signup
+- [x] All inputs use `text-base` (16px) — no iOS Safari viewport zoom (M-015)
+- [x] Error messages displayed inline (wrong credentials, email already in use)
 
 ### AC-11: Routing + protected route (S1.14)
-- [ ] React Router v6 installed and configured
-- [ ] `ProtectedRoute` component: redirects to `/login` if no active session
-- [ ] Routes: `/login`, `/signup`, `/gym` (protected)
+- [x] React Router v6 installed and configured
+- [x] `ProtectedRoute` component: redirects to `/login` if no active session
+- [x] Routes: `/login`, `/signup`, `/gym` (protected)
 
 ### AC-12: SplashScreen — no auth flash (S1.15)
-- [ ] `SplashScreen` component: dark background + GYMHUB wordmark + subtle spinner
-- [ ] `App.tsx` follows the exact pattern from `docs/prd/technical-debt-assessment.md §6 Sprint 1`:
+- [x] `SplashScreen` component: dark background + GYMHUB wordmark + subtle spinner
+- [x] `App.tsx` follows the exact pattern from `docs/prd/technical-debt-assessment.md §6 Sprint 1`:
   ```tsx
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState(null)
@@ -122,8 +122,8 @@ Before Sprint 1 planning is finalized, Lucas must resolve:
 - [ ] Reload as authenticated user → SplashScreen shows briefly → GymPage renders (no login flash)
 
 ### AC-13: GymLayout + GymPage stubs (S1.16/S1.17)
-- [ ] `GymLayout.tsx`: dark background (`bg-slate-950`), correct padding, BottomTabBar slot empty
-- [ ] `GymPage.tsx`: skeleton layout proving auth-to-route flow — workout card placeholders, no data
+- [x] `GymLayout.tsx`: dark background (`bg-slate-950`), correct padding, BottomTabBar slot empty
+- [x] `GymPage.tsx`: skeleton layout proving auth-to-route flow — workout card placeholders, no data
 - [ ] Accessible from `/gym` after login
 
 ### AC-14: Supabase Auth URLs configured (S1.18)
@@ -140,16 +140,16 @@ Before Sprint 1 planning is finalized, Lucas must resolve:
   - Revisit trigger: if app handles health/financial data or expands to public users
 
 ### AC-16: Integration tests (S1.20)
-- [ ] `testcontainers-postgresql` in `pom.xml` (test scope)
-- [ ] `spring-security-test` in `pom.xml` (test scope)
-- [ ] All 6 minimum test cases implemented (from `docs/prd/technical-debt-assessment.md §6 Sprint 1`):
+- [x] `testcontainers-postgresql` in `pom.xml` (test scope)
+- [x] `spring-security-test` in `pom.xml` (test scope)
+- [x] All 6 minimum test cases implemented (from `docs/prd/technical-debt-assessment.md §6 Sprint 1`):
   - T1: GET /api/gym/workouts with valid JWT → 200, only requesting user's data
   - T2: GET /api/gym/workouts without JWT → 401
   - T3: GET /api/gym/workouts with different user's JWT → 200, empty array
   - T4: POST /api/gym/workouts with valid JWT → 201, workout.userId == JWT sub
   - T5: DELETE /api/gym/workouts/{other-user-workout-id} → 404
   - T6: GET /api/gym/supplements with valid JWT → 200, only user's supplement row
-- [ ] `./mvnw test` passes
+- [x] `./mvnw test` passes
 
 ### AC-17: V7 migration applied to Supabase (S1.21)
 - [ ] `V7__add_auth_user_fk.sql`: FK from `tb_gym_workouts.user_id` → `auth.users(id)`

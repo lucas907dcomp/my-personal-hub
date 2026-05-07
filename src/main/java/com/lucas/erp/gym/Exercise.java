@@ -1,6 +1,7 @@
 package com.lucas.erp.gym;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import java.util.UUID;
 
@@ -12,8 +13,14 @@ public class Exercise {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private UUID workoutId; // Chave estrangeira lógica para manter o padrão do seu front
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workout_id", nullable = false)
+    private Workout workout;
 
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
+    @NotBlank
     private String name;
     private Double weight;
     private String reps;
