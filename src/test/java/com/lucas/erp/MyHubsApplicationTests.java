@@ -1,10 +1,9 @@
-package com.lucas.my_hubs;
+package com.lucas.erp;
 
-import com.lucas.erp.MyHubsApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest(classes = MyHubsApplication.class)
+@SpringBootTest
 class MyHubsApplicationTests {
 
     @Test
