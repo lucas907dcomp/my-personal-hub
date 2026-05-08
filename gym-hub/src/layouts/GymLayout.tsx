@@ -2,11 +2,11 @@ import { Outlet } from 'react-router-dom'
 
 export function GymLayout() {
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col">
-      <main className="flex-1 px-4 pb-20 pt-4 max-w-2xl mx-auto w-full">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <main className="flex-1 pb-20 max-w-md mx-auto w-full lg:max-w-3xl">
         <Outlet />
       </main>
-      {/* BottomTabBar slot — Sprint 2 */}
+      {/* BottomTabBar — S2.4 */}
     </div>
   )
 }
