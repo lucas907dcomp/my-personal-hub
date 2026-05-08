@@ -59,6 +59,12 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Actuator — health + metrics endpoints -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<!-- Flyway — schema migration versioning -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
