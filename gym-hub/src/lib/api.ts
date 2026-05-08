@@ -1,19 +1,52 @@
 import type { Session } from '@supabase/supabase-js'
 
+export class ApiError extends Error {
+  readonly status: number
+  readonly body: string
+
+  constructor(status: number, body: string, path: string, method: string) {
+    super(`${method} ${path} → ${status}`)
+    this.name = 'ApiError'
+    this.status = status
+    this.body = body
+  }
+
+  get userMessage(): string {
+    if (this.status === 401) return '401 — Sessão expirada. Clique em "Sair" e entre novamente.'
+    if (this.status === 403) return '403 — Sem permissão para esta operação.'
+    if (this.status === 404) return '404 — Recurso não encontrado.'
+    if (this.status >= 500) return `${this.status} — Erro no servidor. Verifique se o backend está rodando.`
+    return `Erro ${this.status}: ${this.body || 'sem detalhes'}`
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   session: Session,
   options?: RequestInit,
 ): Promise<T> {
-  const res = await fetch(path, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-      ...(options?.headers as Record<string, string>),
-    },
-  })
-  if (!res.ok) throw new Error(`API ${res.status}: ${path}`)
+  const method = options?.method ?? 'GET'
+
+  let res: Response
+  try {
+    res = await fetch(path, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+        ...(options?.headers as Record<string, string>),
+      },
+    })
+  } catch {
+    throw new ApiError(0, '', path, method)
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    console.error(`[API] ${method} ${path} → ${res.status}`, body || '(empty body)')
+    throw new ApiError(res.status, body, path, method)
+  }
+
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
 }

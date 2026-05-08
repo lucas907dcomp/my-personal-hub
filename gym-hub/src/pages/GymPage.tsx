@@ -10,6 +10,7 @@ import { useWorkouts } from '../hooks/useWorkouts'
 import { useExercises } from '../hooks/useExercises'
 import { useSupplements } from '../hooks/useSupplements'
 import { supabase } from '../lib/supabaseClient'
+import { ApiError } from '../lib/api'
 
 interface GymPageProps {
   session: Session
@@ -26,11 +27,7 @@ export function GymPage({ session }: GymPageProps) {
   const [isManaging, setIsManaging] = useState(false)
   const [isAddingExercise, setIsAddingExercise] = useState(false)
   const [newWorkoutName, setNewWorkoutName] = useState('')
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    navigate('/login', { replace: true })
-  }
+  const [apiError, setApiError] = useState<string | null>(null)
 
   // Select first workout once data loads
   useEffect(() => {
@@ -41,11 +38,26 @@ export function GymPage({ session }: GymPageProps) {
 
   const currentExercises = exercises.filter(e => e.workoutId === activeWorkoutId)
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    navigate('/login', { replace: true })
+  }
+
+  const showError = (err: unknown) => {
+    const msg = err instanceof ApiError ? err.userMessage : String(err)
+    setApiError(msg)
+  }
+
   const handleAddWorkout = async () => {
     if (!newWorkoutName.trim()) return
-    const saved = await addWorkout(newWorkoutName.trim())
-    setActiveWorkoutId(saved.id)
-    setNewWorkoutName('')
+    try {
+      const saved = await addWorkout(newWorkoutName.trim())
+      setActiveWorkoutId(saved.id)
+      setNewWorkoutName('')
+      setApiError(null)
+    } catch (err) {
+      showError(err)
+    }
   }
 
   const handleDeleteWorkout = async (id: string) => {
@@ -53,10 +65,15 @@ export function GymPage({ session }: GymPageProps) {
       alert('Você não pode deletar o seu último treino.')
       return
     }
-    await deleteWorkout(id)
-    if (activeWorkoutId === id) {
-      const remaining = workouts.filter(w => w.id !== id)
-      setActiveWorkoutId(remaining[0]?.id ?? null)
+    try {
+      await deleteWorkout(id)
+      if (activeWorkoutId === id) {
+        const remaining = workouts.filter(w => w.id !== id)
+        setActiveWorkoutId(remaining[0]?.id ?? null)
+      }
+      setApiError(null)
+    } catch (err) {
+      showError(err)
     }
   }
 
@@ -67,8 +84,13 @@ export function GymPage({ session }: GymPageProps) {
     rpe: number
   }) => {
     if (!activeWorkoutId) return
-    await addExercise({ ...data, workoutId: activeWorkoutId, canIncreaseNext: false })
-    setIsAddingExercise(false)
+    try {
+      await addExercise({ ...data, workoutId: activeWorkoutId, canIncreaseNext: false })
+      setIsAddingExercise(false)
+      setApiError(null)
+    } catch (err) {
+      showError(err)
+    }
   }
 
   return (
@@ -100,7 +122,19 @@ export function GymPage({ session }: GymPageProps) {
         />
       </header>
 
-      <main className="p-4 space-y-6 mt-2">
+      <main className="p-4 space-y-4 mt-2">
+        {apiError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start justify-between gap-3">
+            <p className="text-red-700 text-sm font-medium leading-snug">{apiError}</p>
+            <button
+              onClick={() => setApiError(null)}
+              className="text-red-400 hover:text-red-600 flex-shrink-0 font-bold text-base leading-none"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         <WorkoutSelector
           workouts={workouts}
           activeWorkoutId={activeWorkoutId}

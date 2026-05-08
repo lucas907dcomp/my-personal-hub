@@ -11,6 +11,8 @@ export function useWorkouts(session: Session) {
     try {
       const data = await apiFetch<WorkoutDTO[]>('/api/gym/workouts', session)
       setWorkouts(data.map(({ id, name }) => ({ id, name })))
+    } catch (err) {
+      console.error('[useWorkouts] load failed:', err)
     } finally {
       setLoading(false)
     }
@@ -40,8 +42,9 @@ export function useWorkouts(session: Session) {
     setWorkouts(prev => prev.filter(w => w.id !== id))
     try {
       await apiFetch<void>(`/api/gym/workouts/${id}`, session, { method: 'DELETE' })
-    } catch {
+    } catch (err) {
       setWorkouts(snapshot)
+      throw err
     }
   }
 
