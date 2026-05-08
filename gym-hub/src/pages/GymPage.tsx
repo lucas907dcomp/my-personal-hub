@@ -1,84 +1,65 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Icon } from '../components/gym/Icon'
 import { SupplementTracker } from '../components/gym/SupplementTracker'
 import { WorkoutSelector } from '../components/gym/WorkoutSelector'
 import { ExerciseCard } from '../components/gym/ExerciseCard'
 import { AddExerciseForm } from '../components/gym/AddExerciseForm'
-
-// Hardcoded test data — S2.1 (no backend connection yet)
-const TEST_WORKOUTS = [
-  { id: 'w1', name: 'Treino A' },
-  { id: 'w2', name: 'Treino B' },
-]
-const TEST_EXERCISES = [
-  { id: 'e1', workoutId: 'w1', name: 'Supino Reto', weight: 80, reps: '4x8', rpe: 8, canIncreaseNext: false },
-  { id: 'e2', workoutId: 'w1', name: 'Remada Curvada', weight: 70, reps: '4x10', rpe: 7, canIncreaseNext: true },
-  { id: 'e3', workoutId: 'w2', name: 'Agachamento', weight: 100, reps: '5x5', rpe: 9, canIncreaseNext: false },
-]
+import { useWorkouts } from '../hooks/useWorkouts'
+import { useExercises } from '../hooks/useExercises'
+import { useSupplements } from '../hooks/useSupplements'
 
 interface GymPageProps {
   session: Session
 }
 
-export function GymPage({ session: _session }: GymPageProps) {
-  const [workouts, setWorkouts] = useState(TEST_WORKOUTS)
-  const [exercises, setExercises] = useState(TEST_EXERCISES)
-  const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>('w1')
-  const [supplements, setSupplements] = useState({ whey: false, creatina: false })
+export function GymPage({ session }: GymPageProps) {
+  const { workouts, addWorkout, deleteWorkout } = useWorkouts(session)
+  const { exercises, localChange, saveExercise, toggleIncreaseLoad, addExercise, deleteExercise } =
+    useExercises(session)
+  const { supplements, toggleSupplement } = useSupplements(session)
+
+  const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null)
   const [isManaging, setIsManaging] = useState(false)
   const [isAddingExercise, setIsAddingExercise] = useState(false)
   const [newWorkoutName, setNewWorkoutName] = useState('')
 
+  // Select first workout once data loads
+  useEffect(() => {
+    if (workouts.length > 0 && !activeWorkoutId) {
+      setActiveWorkoutId(workouts[0].id)
+    }
+  }, [workouts, activeWorkoutId])
+
   const currentExercises = exercises.filter(e => e.workoutId === activeWorkoutId)
 
-  const handleToggleSupplement = (key: 'whey' | 'creatina') => {
-    setSupplements(prev => ({ ...prev, [key]: !prev[key] }))
-  }
-
-  const handleAddWorkout = () => {
+  const handleAddWorkout = async () => {
     if (!newWorkoutName.trim()) return
-    const newWorkout = { id: `w${Date.now()}`, name: newWorkoutName.trim() }
-    setWorkouts(prev => [...prev, newWorkout])
-    setActiveWorkoutId(newWorkout.id)
+    const saved = await addWorkout(newWorkoutName.trim())
+    setActiveWorkoutId(saved.id)
     setNewWorkoutName('')
   }
 
-  const handleDeleteWorkout = (id: string) => {
+  const handleDeleteWorkout = async (id: string) => {
     if (workouts.length <= 1) {
       alert('Você não pode deletar o seu último treino.')
       return
     }
-    setWorkouts(prev => {
-      const remaining = prev.filter(w => w.id !== id)
-      if (activeWorkoutId === id) setActiveWorkoutId(remaining[0].id)
-      return remaining
-    })
-    setExercises(prev => prev.filter(e => e.workoutId !== id))
+    await deleteWorkout(id)
+    if (activeWorkoutId === id) {
+      const remaining = workouts.filter(w => w.id !== id)
+      setActiveWorkoutId(remaining[0]?.id ?? null)
+    }
   }
 
-  const handleLocalChange = (id: string, field: string, value: unknown) => {
-    setExercises(prev => prev.map(e => e.id === id ? { ...e, [field]: value } : e))
-  }
-
-  const handleSaveExercise = (_id: string) => {
-    // S2.2: wire to backend
-  }
-
-  const handleDeleteExercise = (id: string) => {
-    setExercises(prev => prev.filter(e => e.id !== id))
-  }
-
-  const handleToggleIncreaseLoad = (id: string) => {
-    setExercises(prev =>
-      prev.map(e => e.id === id ? { ...e, canIncreaseNext: !e.canIncreaseNext } : e),
-    )
-  }
-
-  const handleAddExercise = (data: { name: string; weight: number; reps: string; rpe: number }) => {
+  const handleAddExercise = async (data: {
+    name: string
+    weight: number
+    reps: string
+    rpe: number
+  }) => {
     if (!activeWorkoutId) return
-    const newEx = { ...data, id: `e${Date.now()}`, workoutId: activeWorkoutId, canIncreaseNext: false }
-    setExercises(prev => [...prev, newEx])
+    await addExercise({ ...data, workoutId: activeWorkoutId, canIncreaseNext: false })
     setIsAddingExercise(false)
   }
 
@@ -101,7 +82,7 @@ export function GymPage({ session: _session }: GymPageProps) {
         <SupplementTracker
           whey={supplements.whey}
           creatina={supplements.creatina}
-          onToggle={handleToggleSupplement}
+          onToggle={toggleSupplement}
         />
       </header>
 
@@ -133,10 +114,10 @@ export function GymPage({ session: _session }: GymPageProps) {
                 <ExerciseCard
                   key={ex.id}
                   exercise={ex}
-                  onLocalChange={handleLocalChange}
-                  onSave={handleSaveExercise}
-                  onDelete={handleDeleteExercise}
-                  onToggleIncreaseLoad={handleToggleIncreaseLoad}
+                  onLocalChange={localChange}
+                  onSave={saveExercise}
+                  onDelete={deleteExercise}
+                  onToggleIncreaseLoad={toggleIncreaseLoad}
                 />
               ))
             )}
