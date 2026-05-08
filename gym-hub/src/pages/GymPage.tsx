@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/gym/Icon'
 import { SupplementTracker } from '../components/gym/SupplementTracker'
 import { WorkoutSelector } from '../components/gym/WorkoutSelector'
@@ -8,12 +9,14 @@ import { AddExerciseForm } from '../components/gym/AddExerciseForm'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { useExercises } from '../hooks/useExercises'
 import { useSupplements } from '../hooks/useSupplements'
+import { supabase } from '../lib/supabaseClient'
 
 interface GymPageProps {
   session: Session
 }
 
 export function GymPage({ session }: GymPageProps) {
+  const navigate = useNavigate()
   const { workouts, addWorkout, deleteWorkout } = useWorkouts(session)
   const { exercises, localChange, saveExercise, toggleIncreaseLoad, addExercise, deleteExercise } =
     useExercises(session)
@@ -23,6 +26,11 @@ export function GymPage({ session }: GymPageProps) {
   const [isManaging, setIsManaging] = useState(false)
   const [isAddingExercise, setIsAddingExercise] = useState(false)
   const [newWorkoutName, setNewWorkoutName] = useState('')
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    navigate('/login', { replace: true })
+  }
 
   // Select first workout once data loads
   useEffect(() => {
@@ -78,6 +86,12 @@ export function GymPage({ session }: GymPageProps) {
               </p>
             </div>
           </div>
+          <button
+            onClick={handleSignOut}
+            className="text-white/60 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
+          >
+            Sair
+          </button>
         </div>
         <SupplementTracker
           whey={supplements.whey}

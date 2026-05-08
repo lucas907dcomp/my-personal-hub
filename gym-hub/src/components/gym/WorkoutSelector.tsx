@@ -33,7 +33,7 @@ export function WorkoutSelector({
       <div className="flex justify-end">
         <button
           onClick={onToggleManage}
-          className="bg-white/10 p-3 rounded-xl hover:bg-white/20 transition text-white"
+          className="bg-slate-100 p-3 rounded-xl hover:bg-slate-200 transition text-slate-600"
         >
           <Icon name="settings" size={20} />
         </button>
@@ -94,9 +94,12 @@ export function WorkoutSelector({
           </button>
         ))}
         {workouts.length === 0 && (
-          <span className="text-sm font-bold text-slate-400 py-4 px-2">
-            Crie um treino em 'Configurações'
-          </span>
+          <button
+            onClick={onToggleManage}
+            className="text-sm font-bold text-orange-500 hover:text-orange-600 py-4 px-2 underline underline-offset-2 transition-colors"
+          >
+            + Criar primeiro treino
+          </button>
         )}
       </div>
     </>
