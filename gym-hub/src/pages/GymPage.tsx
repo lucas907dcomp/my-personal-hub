@@ -6,6 +6,9 @@ import { SupplementTracker } from '../components/gym/SupplementTracker'
 import { WorkoutSelector } from '../components/gym/WorkoutSelector'
 import { ExerciseCard } from '../components/gym/ExerciseCard'
 import { AddExerciseForm } from '../components/gym/AddExerciseForm'
+import { EmptyState } from '../components/EmptyState'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { Toast } from '../components/Toast'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { useExercises } from '../hooks/useExercises'
 import { useSupplements } from '../hooks/useSupplements'
@@ -16,9 +19,11 @@ interface GymPageProps {
   session: Session
 }
 
+type DeleteTarget = { type: 'workout'; id: string } | { type: 'exercise'; id: string } | null
+
 export function GymPage({ session }: GymPageProps) {
   const navigate = useNavigate()
-  const { workouts, addWorkout, deleteWorkout } = useWorkouts(session)
+  const { workouts, addWorkout, deleteWorkout, reorderWorkouts } = useWorkouts(session)
   const { exercises, localChange, saveExercise, toggleIncreaseLoad, addExercise, deleteExercise } =
     useExercises(session)
   const { supplements, toggleSupplement } = useSupplements(session)
@@ -27,7 +32,8 @@ export function GymPage({ session }: GymPageProps) {
   const [isManaging, setIsManaging] = useState(false)
   const [isAddingExercise, setIsAddingExercise] = useState(false)
   const [newWorkoutName, setNewWorkoutName] = useState('')
-  const [apiError, setApiError] = useState<string | null>(null)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null)
 
   // Select first workout once data loads
   useEffect(() => {
@@ -45,7 +51,7 @@ export function GymPage({ session }: GymPageProps) {
 
   const showError = (err: unknown) => {
     const msg = err instanceof ApiError ? err.userMessage : String(err)
-    setApiError(msg)
+    setToastMessage(msg)
   }
 
   const handleAddWorkout = async () => {
@@ -54,7 +60,6 @@ export function GymPage({ session }: GymPageProps) {
       const saved = await addWorkout(newWorkoutName.trim())
       setActiveWorkoutId(saved.id)
       setNewWorkoutName('')
-      setApiError(null)
     } catch (err) {
       showError(err)
     }
@@ -62,16 +67,44 @@ export function GymPage({ session }: GymPageProps) {
 
   const handleDeleteWorkout = async (id: string) => {
     if (workouts.length <= 1) {
-      alert('Você não pode deletar o seu último treino.')
+      setToastMessage('Você não pode deletar o seu último treino.')
       return
     }
+    setDeleteTarget({ type: 'workout', id })
+  }
+
+  const handleDeleteExercise = (id: string) => {
+    setDeleteTarget({ type: 'exercise', id })
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
     try {
-      await deleteWorkout(id)
-      if (activeWorkoutId === id) {
-        const remaining = workouts.filter(w => w.id !== id)
-        setActiveWorkoutId(remaining[0]?.id ?? null)
+      if (deleteTarget.type === 'workout') {
+        await deleteWorkout(deleteTarget.id)
+        if (activeWorkoutId === deleteTarget.id) {
+          const remaining = workouts.filter(w => w.id !== deleteTarget.id)
+          setActiveWorkoutId(remaining[0]?.id ?? null)
+        }
+      } else {
+        await deleteExercise(deleteTarget.id)
       }
-      setApiError(null)
+    } catch (err) {
+      showError(err)
+    } finally {
+      setDeleteTarget(null)
+    }
+  }
+
+  const handleMoveWorkout = async (id: string, direction: 'up' | 'down') => {
+    const idx = workouts.findIndex(w => w.id === id)
+    if (idx === -1) return
+    const newOrder = [...workouts]
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= newOrder.length) return;
+    [newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]]
+    try {
+      await reorderWorkouts(newOrder.map(w => w.id))
     } catch (err) {
       showError(err)
     }
@@ -87,107 +120,123 @@ export function GymPage({ session }: GymPageProps) {
     try {
       await addExercise({ ...data, workoutId: activeWorkoutId, canIncreaseNext: false })
       setIsAddingExercise(false)
-      setApiError(null)
     } catch (err) {
       showError(err)
     }
   }
 
+  const confirmLabel =
+    deleteTarget?.type === 'workout' ? 'Excluir treino' : 'Excluir exercício'
+  const confirmMessage =
+    deleteTarget?.type === 'workout'
+      ? 'Excluir este treino irá remover todos os seus exercícios. Esta ação não pode ser desfeita.'
+      : 'Tem certeza que deseja excluir este exercício?'
+
   return (
     <div className="min-h-screen bg-slate-50 relative">
-      <header className="gym-gradient text-white p-6 rounded-b-[2.5rem] shadow-lg">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
-              <Icon name="dumbbell" size={28} />
+      <div className="max-w-md mx-auto">
+        <header className="gym-gradient text-white p-6 rounded-b-[2.5rem] shadow-lg">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+                <Icon name="dumbbell" size={28} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-black uppercase tracking-tight italic">Gym Hub</h1>
+                <p className="text-white/70 text-xs font-medium uppercase tracking-widest">
+                  Performance & Data
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-black uppercase tracking-tight italic">Gym Hub</h1>
-              <p className="text-white/70 text-xs font-medium uppercase tracking-widest">
-                Performance & Data
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleSignOut}
-            className="text-white/60 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
-          >
-            Sair
-          </button>
-        </div>
-        <SupplementTracker
-          whey={supplements.whey}
-          creatina={supplements.creatina}
-          onToggle={toggleSupplement}
-        />
-      </header>
-
-      <main className="p-4 space-y-4 mt-2">
-        {apiError && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start justify-between gap-3">
-            <p className="text-red-700 text-sm font-medium leading-snug">{apiError}</p>
             <button
-              onClick={() => setApiError(null)}
-              className="text-red-400 hover:text-red-600 flex-shrink-0 font-bold text-base leading-none"
+              onClick={handleSignOut}
+              className="text-white/60 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
             >
-              ✕
+              Sair
             </button>
           </div>
-        )}
-
-        <WorkoutSelector
-          workouts={workouts}
-          activeWorkoutId={activeWorkoutId}
-          onSelect={setActiveWorkoutId}
-          isManaging={isManaging}
-          onToggleManage={() => setIsManaging(prev => !prev)}
-          newWorkoutName={newWorkoutName}
-          onNewWorkoutNameChange={setNewWorkoutName}
-          onAddWorkout={handleAddWorkout}
-          onDeleteWorkout={handleDeleteWorkout}
-        />
-
-        {workouts.length > 0 && (
-          <div className="space-y-5">
-            {currentExercises.length === 0 ? (
-              <div className="text-center p-12 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                  <Icon name="dumbbell" size={32} />
-                </div>
-                <p className="text-slate-500 font-medium">Nenhum exercício neste treino.</p>
-                <p className="text-slate-400 text-xs mt-1">Clique abaixo para adicionar.</p>
-              </div>
-            ) : (
-              currentExercises.map(ex => (
-                <ExerciseCard
-                  key={ex.id}
-                  exercise={ex}
-                  onLocalChange={localChange}
-                  onSave={saveExercise}
-                  onDelete={deleteExercise}
-                  onToggleIncreaseLoad={toggleIncreaseLoad}
-                />
-              ))
-            )}
-          </div>
-        )}
-
-        {workouts.length > 0 && !isAddingExercise && (
-          <button
-            onClick={() => setIsAddingExercise(true)}
-            className="w-full py-5 mt-4 border-2 border-dashed border-slate-300 text-slate-500 rounded-3xl font-black uppercase text-sm tracking-widest flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-slate-400 transition-all"
-          >
-            <Icon name="plus" /> Novo Exercício
-          </button>
-        )}
-
-        {isAddingExercise && (
-          <AddExerciseForm
-            onSubmit={handleAddExercise}
-            onCancel={() => setIsAddingExercise(false)}
+          <SupplementTracker
+            whey={supplements.whey}
+            creatina={supplements.creatina}
+            onToggle={toggleSupplement}
           />
-        )}
-      </main>
+        </header>
+
+        <main className="p-4 space-y-6 mt-2">
+          <WorkoutSelector
+            workouts={workouts}
+            activeWorkoutId={activeWorkoutId}
+            onSelect={setActiveWorkoutId}
+            isManaging={isManaging}
+            onToggleManage={() => setIsManaging(prev => !prev)}
+            newWorkoutName={newWorkoutName}
+            onNewWorkoutNameChange={setNewWorkoutName}
+            onAddWorkout={handleAddWorkout}
+            onDeleteWorkout={handleDeleteWorkout}
+            onMoveWorkout={handleMoveWorkout}
+          />
+
+          {workouts.length === 0 ? (
+            <EmptyState
+              icon="dumbbell"
+              title="Nenhum treino ainda"
+              description="Use o botão acima para criar seu primeiro treino."
+            />
+          ) : (
+            <div className="space-y-5">
+              {currentExercises.length === 0 ? (
+                <EmptyState
+                  icon="dumbbell"
+                  title="Nenhum exercício neste treino."
+                  description="Clique abaixo para adicionar."
+                />
+              ) : (
+                currentExercises.map(ex => (
+                  <ExerciseCard
+                    key={ex.id}
+                    exercise={ex}
+                    onLocalChange={localChange}
+                    onSave={saveExercise}
+                    onDelete={handleDeleteExercise}
+                    onToggleIncreaseLoad={toggleIncreaseLoad}
+                  />
+                ))
+              )}
+            </div>
+          )}
+
+          {workouts.length > 0 && !isAddingExercise && (
+            <button
+              onClick={() => setIsAddingExercise(true)}
+              className="w-full py-5 mt-4 border-2 border-dashed border-slate-300 text-slate-500 rounded-3xl font-black uppercase text-sm tracking-widest flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-slate-400 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <Icon name="plus" /> Novo Exercício
+            </button>
+          )}
+
+          {isAddingExercise && (
+            <AddExerciseForm
+              onSubmit={handleAddExercise}
+              onCancel={() => setIsAddingExercise(false)}
+            />
+          )}
+        </main>
+      </div>
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        title="Confirmar exclusão"
+        message={confirmMessage}
+        confirmLabel={confirmLabel}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
+      <Toast
+        message={toastMessage}
+        onDismiss={() => setToastMessage(null)}
+        variant="error"
+      />
     </div>
   )
 }

@@ -4,6 +4,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,15 +15,24 @@ public class FuelService {
 
     private final FuelRepository repository;
 
-    public List<FuelRecord> getRecords(UUID userId) {
-        return repository.findByUserIdOrderByDateDesc(userId);
+    public List<FuelRecordDTO> getRecords(UUID userId) {
+        return repository.findByUserIdOrderByDateDesc(userId)
+                .stream()
+                .map(FuelRecordDTO::from)
+                .toList();
     }
 
-    public FuelRecord addRecord(UUID userId, FuelRecord record) {
+    public FuelRecordDTO addRecord(UUID userId, CreateFuelRecordRequest request) {
+        FuelRecord record = new FuelRecord();
         record.setUserId(userId);
-        double calculatedLiters = Math.round((record.getTotalValue() / record.getPricePerLiter()) * 100.0) / 100.0;
-        record.setLiters(calculatedLiters);
-        return repository.save(record);
+        record.setTotalValue(request.totalValue());
+        record.setPricePerLiter(request.pricePerLiter());
+        record.setOdometer(request.odometer());
+        record.setFuelType(request.fuelType());
+        BigDecimal liters = request.totalValue()
+                .divide(request.pricePerLiter(), 3, RoundingMode.HALF_UP);
+        record.setLiters(liters);
+        return FuelRecordDTO.from(repository.save(record));
     }
 
     public void deleteRecord(UUID userId, UUID recordId) {

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -22,11 +23,18 @@ public class FuelRecord {
     private LocalDateTime date = LocalDateTime.now();
 
     @NotNull @Positive
-    private Double totalValue;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal totalValue;
+
     @NotNull @Positive
-    private Double pricePerLiter;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal pricePerLiter;
+
     @NotNull @Positive
     private Double odometer;
-    private Double liters;
+
+    @Column(precision = 8, scale = 3)
+    private BigDecimal liters;
+
     private String fuelType;
 }

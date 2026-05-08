@@ -6,5 +6,6 @@ import java.util.UUID;
 public record WorkoutDTO(
         UUID id,
         String name,
+        int position,
         List<ExerciseDTO> exercises
 ) {}

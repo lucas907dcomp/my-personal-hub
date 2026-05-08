@@ -2,7 +2,7 @@
 story_id: STORY-001
 epic_id: EPIC-001
 title: "Sprint 0 — Security & Schema Foundations"
-status: Ready
+status: Done
 priority: CRITICAL
 sprint: 0
 executor: "@dev + @data-engineer"

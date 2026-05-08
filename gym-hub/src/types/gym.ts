@@ -1,6 +1,7 @@
 export interface Workout {
   id: string
   name: string
+  position: number
 }
 
 export interface Exercise {
@@ -18,7 +19,7 @@ export interface Supplements {
   creatina: boolean
 }
 
-// Shape returned by GET /api/gym/workouts (exercises embedded)
+// Shape returned by GET /api/v1/gym/workouts (exercises embedded)
 export interface WorkoutDTO extends Workout {
   exercises: Exercise[]
 }

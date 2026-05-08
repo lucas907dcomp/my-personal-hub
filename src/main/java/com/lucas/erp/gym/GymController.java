@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/gym")
+@RequestMapping("/api/v1/gym")
 @RequiredArgsConstructor
 public class GymController {
 
@@ -44,6 +44,13 @@ public class GymController {
     public ResponseEntity<Void> deleteWorkout(@AuthenticationPrincipal Jwt jwt,
                                               @PathVariable UUID id) {
         gymService.deleteWorkout(userId(jwt), id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/workouts/order")
+    public ResponseEntity<Void> reorderWorkouts(@AuthenticationPrincipal Jwt jwt,
+                                                @RequestBody ReorderWorkoutsRequest req) {
+        gymService.reorderWorkouts(userId(jwt), req.orderedIds());
         return ResponseEntity.noContent().build();
     }
 

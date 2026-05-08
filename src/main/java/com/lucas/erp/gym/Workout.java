@@ -21,6 +21,8 @@ public class Workout {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
+    private int position = 0;
+
     @OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Exercise> exercises = new ArrayList<>();
 }

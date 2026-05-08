@@ -24,7 +24,7 @@ public class GymService {
     // --- WORKOUTS ---
 
     public List<WorkoutDTO> getWorkouts(UUID userId) {
-        List<WorkoutDTO> result = workoutRepository.findByUserId(userId).stream()
+        List<WorkoutDTO> result = workoutRepository.findByUserIdOrderByPositionAsc(userId).stream()
                 .map(this::toWorkoutDTO)
                 .toList();
         log.info("getWorkouts userId={} count={}", userId, result.size());
@@ -32,11 +32,16 @@ public class GymService {
     }
 
     public WorkoutDTO createWorkout(UUID userId, CreateWorkoutRequest req) {
+        int maxPosition = workoutRepository.findByUserIdOrderByPositionAsc(userId).stream()
+                .mapToInt(Workout::getPosition)
+                .max()
+                .orElse(-1);
         Workout workout = new Workout();
         workout.setName(req.name());
         workout.setUserId(userId);
+        workout.setPosition(maxPosition + 1);
         WorkoutDTO dto = toWorkoutDTO(workoutRepository.save(workout));
-        log.info("createWorkout userId={} workoutId={} name={}", userId, dto.id(), req.name());
+        log.info("createWorkout userId={} workoutId={} name={} position={}", userId, dto.id(), req.name(), dto.position());
         return dto;
     }
 
@@ -47,6 +52,18 @@ public class GymService {
         exerciseRepository.deleteByWorkout_Id(workout.getId());
         workoutRepository.delete(workout);
         log.info("deleteWorkout userId={} workoutId={}", userId, workoutId);
+    }
+
+    @Transactional
+    public void reorderWorkouts(UUID userId, List<UUID> orderedIds) {
+        for (int i = 0; i < orderedIds.size(); i++) {
+            UUID workoutId = orderedIds.get(i);
+            Workout workout = workoutRepository.findByIdAndUserId(workoutId, userId)
+                    .orElseThrow(() -> new EntityNotFoundException("Workout not found: " + workoutId));
+            workout.setPosition(i);
+            workoutRepository.save(workout);
+        }
+        log.info("reorderWorkouts userId={} count={}", userId, orderedIds.size());
     }
 
     // --- EXERCISES ---
@@ -111,15 +128,6 @@ public class GymService {
                 .orElse(new SupplementGoalDTO(false, false));
     }
 
-    public SupplementGoalDTO updateSupplements(UUID userId, SupplementGoalDTO data) {
-        SupplementGoal sg = supplementRepository.findById(userId).orElse(new SupplementGoal());
-        sg.setUserId(userId);
-        sg.setWhey(data.whey());
-        sg.setCreatina(data.creatina());
-        return new SupplementGoalDTO(sg.getWhey(), sg.getCreatina());
-        // note: save happens after setting userId — avoids detached entity issues
-    }
-
     @Transactional
     public SupplementGoalDTO saveSupplements(UUID userId, SupplementGoalDTO data) {
         SupplementGoal sg = supplementRepository.findById(userId).orElse(new SupplementGoal());
@@ -136,7 +144,7 @@ public class GymService {
         List<ExerciseDTO> exercises = w.getExercises().stream()
                 .map(this::toExerciseDTO)
                 .toList();
-        return new WorkoutDTO(w.getId(), w.getName(), exercises);
+        return new WorkoutDTO(w.getId(), w.getName(), w.getPosition(), exercises);
     }
 
     private ExerciseDTO toExerciseDTO(Exercise e) {

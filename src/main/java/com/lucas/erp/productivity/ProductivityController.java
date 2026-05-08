@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/productivity")
+@RequestMapping("/api/v1/productivity")
 @RequiredArgsConstructor
 public class ProductivityController {
 
@@ -23,15 +23,15 @@ public class ProductivityController {
     }
 
     @GetMapping("/tasks")
-    public List<RoutineTask> getTasks(@AuthenticationPrincipal Jwt jwt) {
+    public List<RoutineTaskDTO> getTasks(@AuthenticationPrincipal Jwt jwt) {
         return productivityService.getTasks(userId(jwt));
     }
 
     @PostMapping("/tasks")
     @ResponseStatus(HttpStatus.CREATED)
-    public RoutineTask addTask(@AuthenticationPrincipal Jwt jwt,
-                               @Valid @RequestBody RoutineTask task) {
-        return productivityService.addTask(userId(jwt), task);
+    public RoutineTaskDTO addTask(@AuthenticationPrincipal Jwt jwt,
+                                  @Valid @RequestBody CreateRoutineTaskRequest request) {
+        return productivityService.addTask(userId(jwt), request);
     }
 
     @DeleteMapping("/tasks/{id}")
@@ -42,8 +42,8 @@ public class ProductivityController {
     }
 
     @PutMapping("/tasks/{id}/toggle")
-    public RoutineTask toggleTask(@AuthenticationPrincipal Jwt jwt,
-                                  @PathVariable UUID id) {
+    public RoutineTaskDTO toggleTask(@AuthenticationPrincipal Jwt jwt,
+                                     @PathVariable UUID id) {
         return productivityService.toggleTask(userId(jwt), id);
     }
 
@@ -54,13 +54,13 @@ public class ProductivityController {
     }
 
     @GetMapping("/notes")
-    public WorkspaceNote getNote(@AuthenticationPrincipal Jwt jwt) {
+    public WorkspaceNoteDTO getNote(@AuthenticationPrincipal Jwt jwt) {
         return productivityService.getNote(userId(jwt));
     }
 
     @PutMapping("/notes")
-    public WorkspaceNote updateNote(@AuthenticationPrincipal Jwt jwt,
-                                    @RequestBody WorkspaceNote noteAtualizada) {
-        return productivityService.updateNote(userId(jwt), noteAtualizada);
+    public WorkspaceNoteDTO updateNote(@AuthenticationPrincipal Jwt jwt,
+                                       @RequestBody WorkspaceNoteDTO noteDTO) {
+        return productivityService.updateNote(userId(jwt), noteDTO);
     }
 }

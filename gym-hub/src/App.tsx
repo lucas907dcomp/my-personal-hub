@@ -6,6 +6,8 @@ import { SplashScreen } from './components/SplashScreen'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { GymLayout } from './layouts/GymLayout'
 import { GymPage } from './pages/GymPage'
+import { FuelPage } from './pages/FuelPage'
+import { ProductivityPage } from './pages/ProductivityPage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 
@@ -34,14 +36,15 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route
-          path="/gym"
           element={
             <ProtectedRoute session={session}>
               <GymLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<GymPage session={session!} />} />
+          <Route path="/gym" element={<GymPage session={session!} />} />
+          <Route path="/fuel" element={<FuelPage session={session!} />} />
+          <Route path="/tasks" element={<ProductivityPage session={session!} />} />
         </Route>
         <Route path="*" element={<Navigate to={session ? '/gym' : '/login'} replace />} />
       </Routes>

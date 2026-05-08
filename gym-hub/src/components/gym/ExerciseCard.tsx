@@ -1,4 +1,5 @@
 import { Icon } from './Icon'
+import { RPEBadge } from './RPEBadge'
 
 interface Exercise {
   id: string
@@ -27,14 +28,21 @@ export function ExerciseCard({
   return (
     <div className="bg-white p-6 rounded-3xl card-shadow border border-slate-100 relative overflow-hidden transition-all hover:border-slate-200">
       {ex.canIncreaseNext && (
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+        <div
+          className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+          aria-hidden="true"
+        />
       )}
 
       <div className="flex justify-between items-start mb-5 pl-2">
-        <h4 className="font-black text-slate-800 text-lg uppercase tracking-tight">{ex.name}</h4>
+        <div className="flex items-center gap-2">
+          <h4 className="font-black text-slate-800 text-lg uppercase tracking-tight">{ex.name}</h4>
+          <RPEBadge value={ex.rpe} />
+        </div>
         <button
           onClick={() => onDelete(ex.id)}
-          className="text-slate-300 hover:text-red-500 transition-colors bg-slate-50 p-2 rounded-lg"
+          aria-label={`Excluir exercício ${ex.name}`}
+          className="text-slate-300 hover:text-red-500 transition-colors bg-slate-50 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
           <Icon name="trash" size={16} />
         </button>
@@ -42,11 +50,15 @@ export function ExerciseCard({
 
       <div className="grid grid-cols-3 gap-3 mb-5 pl-2">
         <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100 transition-all">
-          <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">
+          <label
+            htmlFor={`weight-${ex.id}`}
+            className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest"
+          >
             Carga
           </label>
           <div className="flex items-end gap-1">
             <input
+              id={`weight-${ex.id}`}
               type="number"
               value={ex.weight}
               onChange={e => onLocalChange(ex.id, 'weight', Number(e.target.value))}
@@ -58,10 +70,14 @@ export function ExerciseCard({
         </div>
 
         <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-          <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">
+          <label
+            htmlFor={`reps-${ex.id}`}
+            className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest"
+          >
             Reps
           </label>
           <input
+            id={`reps-${ex.id}`}
             type="text"
             value={ex.reps}
             onChange={e => onLocalChange(ex.id, 'reps', e.target.value)}
@@ -71,10 +87,14 @@ export function ExerciseCard({
         </div>
 
         <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 focus-within:border-purple-300 focus-within:ring-2 focus-within:ring-purple-100 transition-all">
-          <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">
+          <label
+            htmlFor={`rpe-${ex.id}`}
+            className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest"
+          >
             RPE
           </label>
           <input
+            id={`rpe-${ex.id}`}
             type="number"
             min="1"
             max="10"
@@ -89,7 +109,9 @@ export function ExerciseCard({
       <div className="pl-2">
         <button
           onClick={() => onToggleIncreaseLoad(ex.id)}
-          className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+          aria-label={ex.canIncreaseNext ? 'Carga programada para subir no próximo treino' : 'Marcar para progredir no próximo treino'}
+          aria-pressed={ex.canIncreaseNext}
+          className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 ${
             ex.canIncreaseNext
               ? 'bg-emerald-500 text-white shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)]'
               : 'bg-slate-50 text-slate-500 hover:bg-slate-100'

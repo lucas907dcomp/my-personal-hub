@@ -12,7 +12,7 @@ export function useExercises(session: Session) {
   const load = useCallback(async () => {
     try {
       // Exercises arrive embedded in workouts — single endpoint, no double-fetch
-      const workouts = await apiFetch<WorkoutDTO[]>('/api/gym/workouts', session)
+      const workouts = await apiFetch<WorkoutDTO[]>('/api/v1/gym/workouts', session)
       const flat = workouts.flatMap(w => w.exercises)
       setExercises(flat)
       committed.current = flat
@@ -34,7 +34,7 @@ export function useExercises(session: Session) {
     const snap = committed.current.find(e => e.id === id)
     if (!ex || !snap) return
     try {
-      const updated = await apiFetch<Exercise>(`/api/gym/exercises/${id}`, session, {
+      const updated = await apiFetch<Exercise>(`/api/v1/gym/exercises/${id}`, session, {
         method: 'PUT',
         body: JSON.stringify({ weight: ex.weight, reps: ex.reps, rpe: ex.rpe, canIncreaseNext: ex.canIncreaseNext }),
       })
@@ -56,7 +56,7 @@ export function useExercises(session: Session) {
     setExercises(prev => prev.map(e => e.id === id ? { ...e, canIncreaseNext: newValue } : e))
     try {
       // 2. Persist
-      const updated = await apiFetch<Exercise>(`/api/gym/exercises/${id}`, session, {
+      const updated = await apiFetch<Exercise>(`/api/v1/gym/exercises/${id}`, session, {
         method: 'PUT',
         body: JSON.stringify({ weight: ex.weight, reps: ex.reps, rpe: ex.rpe, canIncreaseNext: newValue }),
       })
@@ -72,7 +72,7 @@ export function useExercises(session: Session) {
     const optimistic: Exercise = { ...data, id: crypto.randomUUID() }
     setExercises(prev => [...prev, optimistic])
     try {
-      const saved = await apiFetch<Exercise>('/api/gym/exercises', session, {
+      const saved = await apiFetch<Exercise>('/api/v1/gym/exercises', session, {
         method: 'POST',
         body: JSON.stringify(data),
       })
@@ -89,7 +89,7 @@ export function useExercises(session: Session) {
     setExercises(prev => prev.filter(e => e.id !== id))
     committed.current = committed.current.filter(e => e.id !== id)
     try {
-      await apiFetch<void>(`/api/gym/exercises/${id}`, session, { method: 'DELETE' })
+      await apiFetch<void>(`/api/v1/gym/exercises/${id}`, session, { method: 'DELETE' })
     } catch {
       setExercises(snapExercises)
       committed.current = snapCommitted

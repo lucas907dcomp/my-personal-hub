@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/fuel")
+@RequestMapping("/api/v1/fuel")
 @RequiredArgsConstructor
 public class FuelController {
 
@@ -23,15 +23,15 @@ public class FuelController {
     }
 
     @GetMapping
-    public List<FuelRecord> getRecords(@AuthenticationPrincipal Jwt jwt) {
+    public List<FuelRecordDTO> getRecords(@AuthenticationPrincipal Jwt jwt) {
         return fuelService.getRecords(userId(jwt));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public FuelRecord addRecord(@AuthenticationPrincipal Jwt jwt,
-                                @Valid @RequestBody FuelRecord record) {
-        return fuelService.addRecord(userId(jwt), record);
+    public FuelRecordDTO addRecord(@AuthenticationPrincipal Jwt jwt,
+                                   @Valid @RequestBody CreateFuelRecordRequest request) {
+        return fuelService.addRecord(userId(jwt), request);
     }
 
     @DeleteMapping("/{id}")

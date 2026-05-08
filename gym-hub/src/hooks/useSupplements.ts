@@ -10,7 +10,7 @@ export function useSupplements(session: Session) {
 
   const load = useCallback(async () => {
     try {
-      const data = await apiFetch<Supplements>('/api/gym/supplements', session)
+      const data = await apiFetch<Supplements>('/api/v1/gym/supplements', session)
       setSupplements(data)
       committed.current = data
     } finally {
@@ -27,7 +27,7 @@ export function useSupplements(session: Session) {
     setSupplements(updated)
     try {
       // 2. Persist
-      const saved = await apiFetch<Supplements>('/api/gym/supplements', session, {
+      const saved = await apiFetch<Supplements>('/api/v1/gym/supplements', session, {
         method: 'PUT',
         body: JSON.stringify(updated),
       })
