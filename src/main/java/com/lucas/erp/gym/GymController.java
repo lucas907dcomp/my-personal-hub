@@ -3,6 +3,9 @@ package com.lucas.erp.gym;
 import com.lucas.erp.gym.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -47,8 +50,12 @@ public class GymController {
     // --- EXERCISES ---
 
     @GetMapping("/exercises")
-    public List<ExerciseDTO> getAllExercises(@AuthenticationPrincipal Jwt jwt) {
-        return gymService.getExercises(userId(jwt));
+    public Page<ExerciseDTO> getExercises(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "200") int size) {
+        Pageable pageable = PageRequest.of(page, Math.min(size, 200));
+        return gymService.getExercisesPage(userId(jwt), pageable);
     }
 
     @PostMapping("/exercises")
