@@ -2,7 +2,7 @@
 story_id: STORY-007
 epic_id: EPIC-001
 title: "Sprint 6 — Hub Enhancements: Frontend & UX"
-status: Ready
+status: Done
 priority: HIGH
 sprint: 6
 executor: "@dev"
@@ -40,48 +40,48 @@ Strings específicas do usuário original ("Java Pós-Graduação", "Foco Java P
 
 ### AC-1: Gym Hub — RPE opcional (GH.1, GH.2, GH.3)
 
-- [ ] `V12__update_rpe_constraint.sql`: `DROP CONSTRAINT chk_exercises_rpe` + `ADD CONSTRAINT chk_exercises_rpe CHECK (rpe IS NULL OR rpe BETWEEN 1 AND 10)`
-- [ ] `gym.ts`: `rpe: number` → `rpe: number | null`
-- [ ] `RPEBadge.tsx`: aceita `value: number | null | undefined`; retorna `null` se valor ausente
-- [ ] `ExerciseCard.tsx`: label RPE mostra "RPE (opcional)"; input aceita valor vazio; salva `null` quando vazio
-- [ ] `AddExerciseForm.tsx`: RPE não é mais required; campo marcado como "(opcional)"
-- [ ] Backend `V12` migration aplicada; `./mvnw test` passa
+- [x] `V12__update_rpe_constraint.sql`: `DROP CONSTRAINT chk_exercises_rpe` + `ADD CONSTRAINT chk_exercises_rpe CHECK (rpe IS NULL OR rpe BETWEEN 1 AND 10)`
+- [x] `gym.ts`: `rpe: number` → `rpe: number | null`
+- [x] `RPEBadge.tsx`: aceita `value: number | null | undefined`; retorna `null` se valor ausente
+- [x] `ExerciseCard.tsx`: label RPE mostra "RPE (opcional)"; input aceita valor vazio; salva `null` quando vazio
+- [x] `AddExerciseForm.tsx`: RPE não é mais required; campo marcado como "(opcional)"
+- [x] Backend `V12` migration aplicada; `./mvnw test` passa
 
 ### AC-2: Gym Hub — Stepper + 1RM (GH.4, GH.5)
 
-- [ ] `Icon.tsx`: novo ícone `minus` adicionado ao `IconName` union + `paths`
-- [ ] `ExerciseCard.tsx`: stepper weight — botões `−2.5` / `+2.5` flanqueando o input, chamam `onSave` imediatamente
-- [ ] `ExerciseCard.tsx`: stepper reps — botões `−1` / `+1` visíveis SOMENTE quando `reps` é inteiro puro (regex `/^\d+$/`)
-- [ ] `ExerciseCard.tsx`: 1RM exibido abaixo dos inputs quando reps ∈ [1, 20] e weight > 0 — formato: `~1RM: XX.X kg`
-- [ ] Stepper de weight: não permite ir abaixo de 0
-- [ ] 1RM ausente quando reps é "AMRAP", "3x10" ou similar (regex não captura)
+- [x] `Icon.tsx`: novo ícone `minus` adicionado ao `IconName` union + `paths`
+- [x] `ExerciseCard.tsx`: stepper weight — botões `−2.5` / `+2.5` flanqueando o input, chamam `onSave` imediatamente
+- [x] `ExerciseCard.tsx`: stepper reps — botões `−1` / `+1` visíveis SOMENTE quando `reps` é inteiro puro (regex `/^\d+$/`)
+- [x] `ExerciseCard.tsx`: 1RM exibido abaixo dos inputs quando reps ∈ [1, 20] e weight > 0 — formato: `~1RM: XX.X kg`
+- [x] Stepper de weight: não permite ir abaixo de 0
+- [x] 1RM ausente quando reps é "AMRAP", "3x10" ou similar (regex não captura)
 
 ### AC-3: Fuel Hub — Novos campos em calcFuelStats (FH.1, FH.2)
 
-- [ ] `fuel.ts`: interface `FuelStats` expandida com:
+- [x] `fuel.ts`: interface `FuelStats` expandida com:
   - `lastTankKmL: number | null`
   - `hasDegradationAlert: boolean`
   - `monthlyHistory: MonthlyFuelRecord[]`
-- [ ] `fuel.ts`: nova interface `MonthlyFuelRecord { month: string; totalSpent: number; fillUps: number }`
-- [ ] `calcFuelStats`: `lastTankKmL` = km do último intervalo / liters do último registro (null se < 2 records)
-- [ ] `calcFuelStats`: `hasDegradationAlert` = `lastTankKmL !== null && lastTankKmL < avgGlobal * 0.85`
-- [ ] `calcFuelStats`: `monthlyHistory` agrupa por `date.substring(0, 7)`, ordenado mais recente primeiro
-- [ ] `calcFuelStats` default (< 2 records): `lastTankKmL: null`, `hasDegradationAlert: false`, `monthlyHistory: []`
+- [x] `fuel.ts`: nova interface `MonthlyFuelRecord { month: string; totalSpent: number; fillUps: number }`
+- [x] `calcFuelStats`: `lastTankKmL` = km do último intervalo / liters do último registro (null se < 2 records)
+- [x] `calcFuelStats`: `hasDegradationAlert` = `lastTankKmL !== null && lastTankKmL < avgGlobal * 0.85`
+- [x] `calcFuelStats`: `monthlyHistory` agrupa por `date.substring(0, 7)`, ordenado mais recente primeiro
+- [x] `calcFuelStats` default (< 2 records): `lastTankKmL: null`, `hasDegradationAlert: false`, `monthlyHistory: []`
 
 ### AC-4: Fuel Hub — Novos componentes visuais (FH.3, FH.4, FH.5)
 
-- [ ] `FuelLastTankCard.tsx`: exibe `lastTankKmL.toFixed(2) km/L` + badge se "acima" ou "abaixo" da média global
-- [ ] `FuelDegradationAlert.tsx`: banner âmbar visível somente quando `hasDegradationAlert === true` — mensagem: "⚠️ Último tanque rendeu 15%+ abaixo da sua média. Verifique pressão dos pneus ou qualidade do combustível."
-- [ ] `FuelMonthlyHistory.tsx`: lista colapsável dos meses — cada linha: "Mai 2026 · 3 abastecimentos · R$ 380,00"
-- [ ] `FuelPage.tsx`: integra os 3 novos componentes; `FuelLastTankCard` exibido somente quando `lastTankKmL !== null`
-- [ ] `FuelDegradationAlert` renderizado acima do formulário de add quando ativo
+- [x] `FuelLastTankCard.tsx`: exibe `lastTankKmL.toFixed(2) km/L` + badge se "acima" ou "abaixo" da média global
+- [x] `FuelDegradationAlert.tsx`: banner âmbar visível somente quando `hasDegradationAlert === true` — mensagem: "⚠️ Último tanque rendeu 15%+ abaixo da sua média. Verifique pressão dos pneus ou qualidade do combustível."
+- [x] `FuelMonthlyHistory.tsx`: lista colapsável dos meses — cada linha: "Mai 2026 · 3 abastecimentos · R$ 380,00"
+- [x] `FuelPage.tsx`: integra os 3 novos componentes; `FuelLastTankCard` exibido somente quando `lastTankKmL !== null`
+- [x] `FuelDegradationAlert` renderizado acima do formulário de add quando ativo
 
 ### AC-5: Productivity Hub — Remover dados pessoais hardcoded (PH.1)
 
-- [ ] `ProductivityPage.tsx`: subtítulo genérico — ex: "Organize sua rotina diária com foco e consistência."
-- [ ] `DashboardView.tsx`: "Foco Java Pós" → "Estudos"; comportamento (filtro `type === 'study'`) preservado
-- [ ] `AddTaskModal.tsx`: "Estudo (Java)" → "Estudo"; "Carreira (LinkedIn)" → "Carreira"
-- [ ] Zero regressão funcional — apenas texto alterado
+- [x] `ProductivityPage.tsx`: subtítulo genérico — ex: "Organize sua rotina diária com foco e consistência."
+- [x] `DashboardView.tsx`: "Foco Java Pós" → "Estudos"; comportamento (filtro `type === 'study'`) preservado
+- [x] `AddTaskModal.tsx`: "Estudo (Java)" → "Estudo"; "Carreira (LinkedIn)" → "Carreira"
+- [x] Zero regressão funcional — apenas texto alterado
 
 ## Tasks
 
@@ -139,7 +139,7 @@ ALTER TABLE tb_gym_exercises
 ## Dev Agent Record
 
 ### Agent Model Used
-_A preencher pelo @dev_
+claude-sonnet-4-6 (Dex @dev)
 
 ### File List
 **Created:**
@@ -166,3 +166,4 @@ _A preencher pelo @dev_
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-08 | Story criada | Aria (@architect) |
+| 2026-05-08 | Implementação completa — GH.1-5, FH.1-5, PH.1. TypeScript: 0 erros. Bundle gz: ~186 KB. | Dex (@dev) |

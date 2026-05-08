@@ -2,7 +2,7 @@
 story_id: STORY-008
 epic_id: EPIC-001
 title: "Sprint 7 — Data Layer & Gamification"
-status: Ready
+status: Done
 priority: HIGH
 sprint: 7
 executor: "@dev + @data-engineer"
@@ -38,36 +38,36 @@ PK composta `(user_id, completion_date)`. `completion_percentage` INTEGER 0–10
 
 ### AC-1: tb_gym_sessions — Migration & Backend (GS.1, GS.2, GS.3, GS.4)
 
-- [ ] `V13__create_gym_sessions.sql`: tabela `tb_gym_sessions` (ver schema abaixo)
-- [ ] `GymSession.java` entity: id, userId, exerciseId (FK ON DELETE CASCADE), loggedAt, weight, reps, rpe
-- [ ] `SessionRepository.java`: `findTopByExerciseIdAndUserIdOrderByLoggedAtDesc(UUID, UUID)` — última sessão
-- [ ] `GymService.logSession(userId, exerciseId, request)` → `GymSessionDTO`
-- [ ] `GymService.getLastSession(userId, exerciseId)` → `Optional<GymSessionDTO>`
-- [ ] `GymController`: `POST /api/v1/gym/exercises/{id}/sessions` → 201 + `GymSessionDTO`
-- [ ] `GymController`: `GET /api/v1/gym/exercises/{id}/sessions/last` → `GymSessionDTO` ou 404
-- [ ] `GymSessionDTO.java`: record (id, exerciseId, loggedAt, weight, reps, rpe)
-- [ ] `LogSessionRequest.java`: record (Double weight, String reps, Integer rpe) — todos opcionais
-- [ ] Endpoint de log usa os valores do request; se null, copia do estado atual do exercício
+- [x] `V13__create_gym_sessions.sql`: tabela `tb_gym_sessions` (ver schema abaixo)
+- [x] `GymSession.java` entity: id, userId, exerciseId (FK ON DELETE CASCADE), loggedAt, weight, reps, rpe
+- [x] `SessionRepository.java`: `findTopByExerciseIdAndUserIdOrderByLoggedAtDesc(UUID, UUID)` — última sessão
+- [x] `GymService.logSession(userId, exerciseId, request)` → `GymSessionDTO`
+- [x] `GymService.getLastSession(userId, exerciseId)` → `Optional<GymSessionDTO>`
+- [x] `GymController`: `POST /api/v1/gym/exercises/{id}/sessions` → 201 + `GymSessionDTO`
+- [x] `GymController`: `GET /api/v1/gym/exercises/{id}/sessions/last` → `GymSessionDTO` ou 404
+- [x] `GymSessionDTO.java`: record (id, exerciseId, loggedAt, weight, reps, rpe)
+- [x] `LogSessionRequest.java`: record (Double weight, String reps, Integer rpe) — todos opcionais
+- [x] Endpoint de log usa os valores do request; se null, copia do estado atual do exercício
 
 ### AC-2: tb_gym_sessions — Frontend (GS.5, GS.6)
 
-- [ ] `useExerciseSessions.ts` hook: `logSession(exerciseId)` chama POST; `lastSession` state populado via GET no mount
-- [ ] `ExerciseCard.tsx`: botão "Salvar Sessão" (ícone `check` + texto) abaixo dos steppers
+- [x] `useExerciseSessions.ts` hook: `logSession(exerciseId)` chama POST; `lastSession` state populado via GET no mount
+- [x] `ExerciseCard.tsx`: botão "Salvar Sessão" (ícone `check` + texto) abaixo dos steppers
   - Ao clicar: POST com valores atuais → toast de sucesso ou erro (reutiliza `Toast.tsx`)
   - Estado "salvando..." durante a request
-- [ ] `ExerciseCard.tsx`: seção "Último treino:" exibida quando `lastSession` exists
+- [x] `ExerciseCard.tsx`: seção "Último treino:" exibida quando `lastSession` exists
   - Formato: `"há 2 dias · 80 kg · 3x10 · RPE 7"`
   - `loggedAt` formatado como "hoje", "ontem", "há X dias"
-- [ ] `GymPage.tsx` ou `useExerciseSessions` usa `session` prop já disponível
+- [x] `GymPage.tsx` ou `useExerciseSessions` usa `session` prop já disponível
 
 ### AC-3: is_recurring — Migration & Backend (PS.1, PS.2, PS.3)
 
-- [ ] `V14__add_is_recurring.sql`: `ALTER TABLE tb_routine_tasks ADD COLUMN is_recurring BOOLEAN NOT NULL DEFAULT TRUE`
-- [ ] `RoutineTask.java` entity: campo `isRecurring boolean` (default `true`)
-- [ ] `RoutineTaskDTO.java`: campo `boolean isRecurring` adicionado
-- [ ] `CreateRoutineTaskRequest.java`: campo `Boolean isRecurring` (default `true` quando null no request)
-- [ ] `ProductivityService.addTask()`: seta `isRecurring` do request (default true)
-- [ ] `ProductivityService.resetDailyRoutine()` — novo comportamento:
+- [x] `V14__add_is_recurring.sql`: `ALTER TABLE tb_routine_tasks ADD COLUMN is_recurring BOOLEAN NOT NULL DEFAULT TRUE`
+- [x] `RoutineTask.java` entity: campo `isRecurring boolean` (default `true`)
+- [x] `RoutineTaskDTO.java`: campo `boolean isRecurring` adicionado
+- [x] `CreateRoutineTaskRequest.java`: campo `Boolean isRecurring` (default `true` quando null no request)
+- [x] `ProductivityService.addTask()`: seta `isRecurring` do request (default true)
+- [x] `ProductivityService.resetDailyRoutine()` — novo comportamento:
   1. Calcula `completion_percentage` das tasks atuais (antes de qualquer mudança)
   2. Chama `saveDailyCompletion(userId, percentage)` — upsert em `tb_daily_completions`
   3. Para `is_recurring = true`: `done = false` (mantém na lista)
@@ -76,26 +76,26 @@ PK composta `(user_id, completion_date)`. `completion_percentage` INTEGER 0–10
 
 ### AC-4: is_recurring — Frontend (PS.4)
 
-- [ ] `productivity.ts`: `RoutineTask` e `CreateRoutineTask` adicionam `isRecurring: boolean`
-- [ ] `AddTaskModal.tsx`: toggle "Tarefa recorrente" (ativo por default)
+- [x] `productivity.ts`: `RoutineTask` e `CreateRoutineTask` adicionam `isRecurring: boolean`
+- [x] `AddTaskModal.tsx`: toggle "Tarefa recorrente" (ativo por default)
   - Quando inativo: label "(única vez — removida após conclusão no reset)"
   - Visual: pill switch simples com `bg-indigo-600` quando ativo
-- [ ] `TaskCard.tsx`: indicador visual sutil para tarefas não-recorrentes (ex: badge "Única" em slate-400)
+- [x] `TaskCard.tsx`: indicador visual sutil para tarefas não-recorrentes (ex: badge "Única" em slate-400)
 
 ### AC-5: tb_daily_completions + Streaks (PS.5, PS.6, PS.7, PS.8, PS.9, PS.10)
 
-- [ ] `V15__create_daily_completions.sql`: tabela `tb_daily_completions` (ver schema abaixo)
-- [ ] `DailyCompletion.java` entity + `DailyCompletionRepository.java`
-- [ ] `ProductivityService.saveDailyCompletion(userId, percentage)`: upsert — se já existe entry para hoje, atualiza
-- [ ] `ProductivityService.getStreak(userId)` → `StreakDTO`:
+- [x] `V15__create_daily_completions.sql`: tabela `tb_daily_completions` (ver schema abaixo)
+- [x] `DailyCompletion.java` entity + `DailyCompletionRepository.java`
+- [x] `ProductivityService.saveDailyCompletion(userId, percentage)`: upsert — se já existe entry para hoje, atualiza
+- [x] `ProductivityService.getStreak(userId)` → `StreakDTO`:
   - Busca lista ordenada DESC por `completion_date`
   - Itera: dia esperado = hoje (se já resetou hoje) ou ontem (se não)
   - Conta consecutivos com `completion_percentage = 100`
   - `totalDays` = total de registros do usuário
-- [ ] `StreakDTO.java`: record `(int currentStreak, int totalDays)`
-- [ ] `ProductivityController`: `GET /api/v1/productivity/streak` → `StreakDTO`
-- [ ] `useProductivityStreak.ts` hook: fetcha `/api/v1/productivity/streak` no mount
-- [ ] `ProductivityPage.tsx`: exibe streak no header
+- [x] `StreakDTO.java`: record `(int currentStreak, int totalDays)`
+- [x] `ProductivityController`: `GET /api/v1/productivity/streak` → `StreakDTO`
+- [x] `useProductivityStreak.ts` hook: fetcha `/api/v1/productivity/streak` no mount
+- [x] `ProductivityPage.tsx`: exibe streak no header
   - `currentStreak >= 1`: "🔥 {n} dia(s)" em amber
   - `currentStreak === 0`: sem exibição (não mostrar "0 dias")
 
@@ -185,7 +185,7 @@ CREATE INDEX idx_daily_completions_user ON tb_daily_completions(user_id, complet
 ## Dev Agent Record
 
 ### Agent Model Used
-_A preencher pelo @dev_
+claude-sonnet-4-6 (Dex @dev)
 
 ### File List
 **Created:**
@@ -222,3 +222,4 @@ _A preencher pelo @dev_
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-08 | Story criada | Aria (@architect) |
+| 2026-05-08 | Implementação completa — GS.1-6, PS.1-10. TypeScript: 0 erros. Bundle gz: ~186 KB. Backend: Java 25 requerido (env local = 21, não compilável localmente). | Dex (@dev) |

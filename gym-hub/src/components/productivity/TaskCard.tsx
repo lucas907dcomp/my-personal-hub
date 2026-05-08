@@ -43,13 +43,20 @@ export function TaskCard({
           {task.time}
         </div>
         <div>
-          <span
-            className={`font-bold text-lg ${
-              task.done ? 'text-emerald-700 line-through' : 'text-slate-800'
-            }`}
-          >
-            {task.title}
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className={`font-bold text-lg ${
+                task.done ? 'text-emerald-700 line-through' : 'text-slate-800'
+              }`}
+            >
+              {task.title}
+            </span>
+            {!task.isRecurring && (
+              <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-lg uppercase tracking-wider">
+                Única
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1.5 mt-0.5">
             {getTaskIcon(task)}
             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">

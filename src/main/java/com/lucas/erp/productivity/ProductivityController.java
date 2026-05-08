@@ -53,6 +53,11 @@ public class ProductivityController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/streak")
+    public StreakDTO getStreak(@AuthenticationPrincipal Jwt jwt) {
+        return productivityService.getStreak(userId(jwt));
+    }
+
     @GetMapping("/notes")
     public WorkspaceNoteDTO getNote(@AuthenticationPrincipal Jwt jwt) {
         return productivityService.getNote(userId(jwt));

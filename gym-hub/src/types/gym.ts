@@ -10,8 +10,17 @@ export interface Exercise {
   name: string
   weight: number
   reps: string
-  rpe: number
+  rpe: number | null
   canIncreaseNext: boolean
+}
+
+export interface GymSession {
+  id: string
+  exerciseId: string
+  loggedAt: string
+  weight: number | null
+  reps: string | null
+  rpe: number | null
 }
 
 export interface Supplements {

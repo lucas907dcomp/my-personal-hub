@@ -1,8 +1,12 @@
-import type { FuelRecord, FuelStats } from '../types/fuel'
+import type { FuelRecord, FuelStats, MonthlyFuelRecord } from '../types/fuel'
 
 export function calcFuelStats(records: FuelRecord[]): FuelStats {
   if (records.length < 2) {
-    return { avgGlobal: 0, gasAvg: 0, ethAvg: 0, myRatio: 0.70, totalDistance: 0, totalSpent: 0, costPerKm: '0.00' }
+    return {
+      avgGlobal: 0, gasAvg: 0, ethAvg: 0, myRatio: 0.70,
+      totalDistance: 0, totalSpent: 0, costPerKm: '0.00',
+      lastTankKmL: null, hasDegradationAlert: false, monthlyHistory: [],
+    }
   }
 
   // Records arrive newest-first from API; reverse to chronological for segment calculation
@@ -41,5 +45,37 @@ export function calcFuelStats(records: FuelRecord[]): FuelStats {
     myRatio = Number(ethAvg) / Number(gasAvg)
   }
 
-  return { avgGlobal, gasAvg, ethAvg, myRatio, totalDistance, totalSpent, costPerKm }
+  // ADR-020: lastTankKmL — last segment distance / last fill-up liters
+  const n = chrono.length
+  const lastSegmentDistance = chrono[n - 1].odometer - chrono[n - 2].odometer
+  const lastLiters = Number(chrono[n - 1].liters)
+  const lastTankKmL = lastSegmentDistance > 0 && lastLiters > 0
+    ? lastSegmentDistance / lastLiters
+    : null
+
+  // ADR-020: hasDegradationAlert — last tank is 15%+ below global average
+  const avgGlobalNum = Number(avgGlobal)
+  const hasDegradationAlert = lastTankKmL !== null && avgGlobalNum > 0
+    ? lastTankKmL < avgGlobalNum * 0.85
+    : false
+
+  // ADR-020: monthlyHistory — group by YYYY-MM, sorted most recent first
+  const monthMap = new Map<string, MonthlyFuelRecord>()
+  for (const record of records) {
+    const month = record.date.substring(0, 7)
+    const existing = monthMap.get(month)
+    if (existing) {
+      existing.totalSpent += Number(record.totalValue)
+      existing.fillUps += 1
+    } else {
+      monthMap.set(month, { month, totalSpent: Number(record.totalValue), fillUps: 1 })
+    }
+  }
+  const monthlyHistory = Array.from(monthMap.values())
+    .sort((a, b) => b.month.localeCompare(a.month))
+
+  return {
+    avgGlobal, gasAvg, ethAvg, myRatio, totalDistance, totalSpent, costPerKm,
+    lastTankKmL, hasDegradationAlert, monthlyHistory,
+  }
 }

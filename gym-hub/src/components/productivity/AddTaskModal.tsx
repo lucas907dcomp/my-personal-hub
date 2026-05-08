@@ -11,10 +11,11 @@ export function AddTaskModal({ onAdd, onClose }: AddTaskModalProps) {
   const [title, setTitle] = useState('')
   const [time, setTime] = useState('')
   const [type, setType] = useState<TaskType>('basic')
+  const [isRecurring, setIsRecurring] = useState(true)
 
   const handleSubmit = async () => {
     if (!title.trim() || !time) return
-    await onAdd({ title: title.trim(), time, type })
+    await onAdd({ title: title.trim(), time, type, isRecurring })
     onClose()
   }
 
@@ -71,12 +72,37 @@ export function AddTaskModal({ onAdd, onClose }: AddTaskModalProps) {
                 onChange={e => setType(e.target.value as TaskType)}
               >
                 <option value="basic">Básico</option>
-                <option value="study">Estudo (Java)</option>
-                <option value="career">Carreira (LinkedIn)</option>
+                <option value="study">Estudo</option>
+                <option value="career">Carreira</option>
                 <option value="work">Trabalho / Vagas</option>
                 <option value="health">Saúde / Fitness</option>
               </select>
             </div>
+          </div>
+
+          {/* Recurring toggle (ADR-023) */}
+          <div className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3 border border-slate-200">
+            <div>
+              <p className="text-sm font-bold text-slate-700">Tarefa recorrente</p>
+              {!isRecurring && (
+                <p className="text-[11px] text-slate-400 mt-0.5">única vez — removida após conclusão no reset</p>
+              )}
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isRecurring}
+              onClick={() => setIsRecurring(prev => !prev)}
+              className={`relative inline-flex w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                isRecurring ? 'bg-indigo-600' : 'bg-slate-300'
+              }`}
+            >
+              <span
+                className={`inline-block w-4 h-4 bg-white rounded-full shadow transition-transform mt-1 ${
+                  isRecurring ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
           </div>
 
           <button

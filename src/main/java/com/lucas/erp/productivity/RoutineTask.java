@@ -22,4 +22,7 @@ public class RoutineTask {
     private String time;
     private Boolean done = false;
     private String type;
+
+    @Column(name = "is_recurring", nullable = false)
+    private Boolean isRecurring = true;
 }

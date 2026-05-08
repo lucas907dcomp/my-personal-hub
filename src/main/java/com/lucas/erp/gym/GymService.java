@@ -9,7 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -20,6 +22,7 @@ public class GymService {
     private final WorkoutRepository workoutRepository;
     private final ExerciseRepository exerciseRepository;
     private final SupplementRepository supplementRepository;
+    private final SessionRepository sessionRepository;
 
     // --- WORKOUTS ---
 
@@ -105,7 +108,8 @@ public class GymService {
                 .orElseThrow(() -> new EntityNotFoundException("Exercise not found"));
         if (req.weight() != null) exercise.setWeight(req.weight());
         if (req.reps() != null) exercise.setReps(req.reps());
-        if (req.rpe() != null) exercise.setRpe(req.rpe());
+        // Allow null to clear RPE (ADR-017: optional RPE)
+        exercise.setRpe(req.rpe());
         if (req.canIncreaseNext() != null) exercise.setCanIncreaseNext(req.canIncreaseNext());
         ExerciseDTO dto = toExerciseDTO(exerciseRepository.save(exercise));
         log.info("updateExercise userId={} exerciseId={}", userId, exerciseId);
@@ -118,6 +122,35 @@ public class GymService {
                 .orElseThrow(() -> new EntityNotFoundException("Exercise not found"));
         exerciseRepository.delete(exercise);
         log.info("deleteExercise userId={} exerciseId={}", userId, exerciseId);
+    }
+
+    // --- SESSIONS (ADR-022) ---
+
+    @Transactional
+    public GymSessionDTO logSession(UUID userId, UUID exerciseId, LogSessionRequest req) {
+        Exercise exercise = exerciseRepository.findById(exerciseId)
+                .filter(e -> e.getUserId().equals(userId))
+                .orElseThrow(() -> new EntityNotFoundException("Exercise not found"));
+
+        GymSession session = new GymSession();
+        session.setUserId(userId);
+        session.setExercise(exercise);
+        session.setLoggedAt(LocalDateTime.now());
+        session.setWeight(req.weight() != null ? req.weight() : exercise.getWeight());
+        session.setReps(req.reps() != null ? req.reps() : exercise.getReps());
+        session.setRpe(req.rpe() != null ? req.rpe() : exercise.getRpe());
+
+        GymSessionDTO dto = GymSessionDTO.from(sessionRepository.save(session));
+        log.info("logSession userId={} exerciseId={}", userId, exerciseId);
+        return dto;
+    }
+
+    public Optional<GymSessionDTO> getLastSession(UUID userId, UUID exerciseId) {
+        exerciseRepository.findById(exerciseId)
+                .filter(e -> e.getUserId().equals(userId))
+                .orElseThrow(() -> new EntityNotFoundException("Exercise not found"));
+        return sessionRepository.findTopByExercise_IdAndUserIdOrderByLoggedAtDesc(exerciseId, userId)
+                .map(GymSessionDTO::from);
     }
 
     // --- SUPPLEMENTS ---

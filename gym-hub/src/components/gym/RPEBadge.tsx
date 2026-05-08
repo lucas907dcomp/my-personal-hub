@@ -1,5 +1,5 @@
 interface RPEBadgeProps {
-  value: number
+  value: number | null | undefined
 }
 
 const rpeLabel = (v: number) => {
@@ -17,6 +17,8 @@ const rpeColor = (v: number) => {
 }
 
 export function RPEBadge({ value }: RPEBadgeProps) {
+  if (value == null) return null
+
   return (
     <span
       aria-label={`RPE ${value} — ${rpeLabel(value)}`}

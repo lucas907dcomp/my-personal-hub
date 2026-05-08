@@ -3,6 +3,9 @@ import { FuelStatsGrid } from '../components/fuel/FuelStatsGrid'
 import { FuelRuleCard } from '../components/fuel/FuelRuleCard'
 import { AddFuelForm } from '../components/fuel/AddFuelForm'
 import { FuelRecordCard } from '../components/fuel/FuelRecordCard'
+import { FuelLastTankCard } from '../components/fuel/FuelLastTankCard'
+import { FuelDegradationAlert } from '../components/fuel/FuelDegradationAlert'
+import { FuelMonthlyHistory } from '../components/fuel/FuelMonthlyHistory'
 import { useFuelRecords } from '../hooks/useFuelRecords'
 import type { FuelType } from '../types/fuel'
 import { calcFuelStats } from '../lib/fuelStats'
@@ -44,9 +47,19 @@ export function FuelPage({ session }: FuelPageProps) {
 
         <FuelStatsGrid stats={stats} />
 
+        {/* Último tanque — only when data is available */}
+        {stats.lastTankKmL !== null && (
+          <FuelLastTankCard lastTankKmL={stats.lastTankKmL} avgGlobal={stats.avgGlobal} />
+        )}
+
         <FuelRuleCard ratioPercentage={ratioPercentage} />
 
+        {/* Degradation alert above the form */}
+        {stats.hasDegradationAlert && <FuelDegradationAlert />}
+
         <AddFuelForm onAdd={handleAdd} />
+
+        <FuelMonthlyHistory history={stats.monthlyHistory} />
 
         <section>
           <h2 className="text-xl font-semibold mb-4 text-slate-200">Histórico de Registros</h2>

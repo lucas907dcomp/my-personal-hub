@@ -17,6 +17,12 @@ export interface CreateFuelRecord {
   fuelType: FuelType
 }
 
+export interface MonthlyFuelRecord {
+  month: string
+  totalSpent: number
+  fillUps: number
+}
+
 export interface FuelStats {
   avgGlobal: number | string
   gasAvg: number | string
@@ -25,4 +31,7 @@ export interface FuelStats {
   totalDistance: number
   totalSpent: number
   costPerKm: string
+  lastTankKmL: number | null
+  hasDegradationAlert: boolean
+  monthlyHistory: MonthlyFuelRecord[]
 }

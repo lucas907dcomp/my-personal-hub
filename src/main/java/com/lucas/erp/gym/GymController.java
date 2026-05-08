@@ -86,6 +86,24 @@ public class GymController {
         return ResponseEntity.noContent().build();
     }
 
+    // --- SESSIONS (ADR-022) ---
+
+    @PostMapping("/exercises/{id}/sessions")
+    @ResponseStatus(HttpStatus.CREATED)
+    public GymSessionDTO logSession(@AuthenticationPrincipal Jwt jwt,
+                                    @PathVariable UUID id,
+                                    @RequestBody LogSessionRequest req) {
+        return gymService.logSession(userId(jwt), id, req);
+    }
+
+    @GetMapping("/exercises/{id}/sessions/last")
+    public ResponseEntity<GymSessionDTO> getLastSession(@AuthenticationPrincipal Jwt jwt,
+                                                         @PathVariable UUID id) {
+        return gymService.getLastSession(userId(jwt), id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     // --- SUPPLEMENTS ---
 
     @GetMapping("/supplements")

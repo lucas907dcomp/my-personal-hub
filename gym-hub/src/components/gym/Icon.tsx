@@ -1,6 +1,7 @@
 export type IconName =
   | 'dumbbell'
   | 'plus'
+  | 'minus'
   | 'trash'
   | 'trendingUp'
   | 'check'
@@ -26,6 +27,7 @@ interface IconProps {
 const paths: Record<IconName, React.ReactNode> = {
   dumbbell: <path d="M6.5 6.5h11v11h-11z M4 9h16v6H4z M2 11h20v2H2z M8 4v16M16 4v16" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  minus: <path d="M5 12h14" />,
   trash: <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />,
   trendingUp: <path d="M23 6l-9.5 9.5-5-5L1 18M17 6h6v6" />,
   check: <path d="M20 6L9 17l-5-5" />,

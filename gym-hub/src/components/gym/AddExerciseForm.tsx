@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 interface AddExerciseFormProps {
-  onSubmit: (data: { name: string; weight: number; reps: string; rpe: number }) => void
+  onSubmit: (data: { name: string; weight: number; reps: string; rpe: number | null }) => void
   onCancel: () => void
 }
 
@@ -9,12 +9,17 @@ export function AddExerciseForm({ onSubmit, onCancel }: AddExerciseFormProps) {
   const [name, setName] = useState('')
   const [weight, setWeight] = useState('')
   const [reps, setReps] = useState('')
-  const [rpe, setRpe] = useState('8')
+  const [rpe, setRpe] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name) return
-    onSubmit({ name, weight: Number(weight), reps, rpe: Number(rpe) })
+    onSubmit({
+      name,
+      weight: Number(weight),
+      reps,
+      rpe: rpe === '' ? null : Number(rpe),
+    })
   }
 
   return (
@@ -68,15 +73,14 @@ export function AddExerciseForm({ onSubmit, onCancel }: AddExerciseFormProps) {
           </div>
           <div className="w-1/3">
             <label htmlFor="exercise-rpe" className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">
-              Esforço (RPE)
+              RPE (opcional)
             </label>
             <input
               id="exercise-rpe"
-              required
               type="number"
               min="1"
               max="10"
-              placeholder="RPE"
+              placeholder="1–10"
               value={rpe}
               onChange={e => setRpe(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-base font-bold focus:outline-none focus:border-orange-400 transition-all"

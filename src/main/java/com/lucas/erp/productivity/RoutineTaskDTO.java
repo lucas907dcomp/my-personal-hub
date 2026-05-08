@@ -7,7 +7,8 @@ public record RoutineTaskDTO(
         String title,
         String time,
         boolean done,
-        String type
+        String type,
+        boolean isRecurring
 ) {
     public static RoutineTaskDTO from(RoutineTask t) {
         return new RoutineTaskDTO(
@@ -15,7 +16,8 @@ public record RoutineTaskDTO(
                 t.getTitle(),
                 t.getTime(),
                 Boolean.TRUE.equals(t.getDone()),
-                t.getType()
+                t.getType(),
+                Boolean.TRUE.equals(t.getIsRecurring())
         );
     }
 }

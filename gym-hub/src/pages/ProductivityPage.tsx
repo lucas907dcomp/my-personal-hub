@@ -5,6 +5,7 @@ import { DashboardView } from '../components/productivity/DashboardView'
 import { TaskListView } from '../components/productivity/TaskListView'
 import { useProductivityTasks } from '../hooks/useProductivityTasks'
 import { useProductivityNote } from '../hooks/useProductivityNote'
+import { useProductivityStreak } from '../hooks/useProductivityStreak'
 
 interface ProductivityPageProps {
   session: Session
@@ -15,6 +16,7 @@ type Tab = 'dashboard' | 'day'
 export function ProductivityPage({ session }: ProductivityPageProps) {
   const { tasks, addTask, deleteTask, toggleTask, resetTasks } = useProductivityTasks(session)
   const { content: noteContent, updateContent: onNoteChange } = useProductivityNote(session)
+  const { streak, reload: reloadStreak } = useProductivityStreak(session)
 
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
   const [showResetConfirm, setShowResetConfirm] = useState(false)
@@ -29,6 +31,7 @@ export function ProductivityPage({ session }: ProductivityPageProps) {
   const handleReset = async () => {
     await resetTasks()
     setShowResetConfirm(false)
+    reloadStreak()
   }
 
   return (
@@ -41,9 +44,16 @@ export function ProductivityPage({ session }: ProductivityPageProps) {
             <h1 className="text-3xl font-black tracking-tighter text-slate-900 italic uppercase underline decoration-indigo-500 underline-offset-8">
               Cronograma Diário
             </h1>
-            <p className="text-slate-500 font-medium mt-2 text-sm tracking-tight">
-              Foco Total: Java Pós-Graduação &amp; Performance Profissional.
-            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <p className="text-slate-500 font-medium text-sm tracking-tight">
+                Organize sua rotina diária com foco e consistência.
+              </p>
+              {streak.currentStreak >= 1 && (
+                <span className="text-sm font-black text-amber-500 bg-amber-50 px-3 py-1 rounded-xl">
+                  🔥 {streak.currentStreak} dia{streak.currentStreak !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-4">

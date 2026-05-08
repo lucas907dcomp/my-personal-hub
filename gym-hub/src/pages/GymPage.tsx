@@ -114,7 +114,7 @@ export function GymPage({ session }: GymPageProps) {
     name: string
     weight: number
     reps: string
-    rpe: number
+    rpe: number | null
   }) => {
     if (!activeWorkoutId) return
     try {
@@ -195,6 +195,7 @@ export function GymPage({ session }: GymPageProps) {
                   <ExerciseCard
                     key={ex.id}
                     exercise={ex}
+                    session={session}
                     onLocalChange={localChange}
                     onSave={saveExercise}
                     onDelete={handleDeleteExercise}

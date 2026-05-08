@@ -25,7 +25,7 @@ export function DashboardView({ tasks, nextTask, noteContent, onNoteChange, onTo
   const studyTasks = tasks.filter(t => t.type === 'study')
   const professionalTasks = tasks.filter(t => t.type === 'work' || t.type === 'career')
 
-  const displayTask = nextTask ?? { id: null, title: 'Dia concluído!', time: '—', type: 'basic' as const, done: true }
+  const displayTask = nextTask ?? { id: null, title: 'Dia concluído!', time: '—', type: 'basic' as const, done: true, isRecurring: true }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -86,11 +86,11 @@ export function DashboardView({ tasks, nextTask, noteContent, onNoteChange, onTo
 
       {/* Right column */}
       <div className="space-y-6">
-        {/* Foco Java Pós */}
+        {/* Estudos */}
         <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
           <h3 className="font-bold text-lg mb-6 flex items-center gap-2 italic">
             <Icon name="code" size={20} className="text-blue-400" />
-            Foco Java Pós
+            Estudos
           </h3>
           <div className="space-y-4">
             {studyTasks.map(item => (

@@ -55,9 +55,10 @@ export function useProductivityTasks(session: Session) {
   }
 
   const resetTasks = async (): Promise<void> => {
-    setTasks(prev => prev.map(t => ({ ...t, done: false })))
     try {
       await apiFetch<void>('/api/v1/productivity/tasks/reset', session, { method: 'POST' })
+      // Reload from server: non-recurring done tasks are deleted by the API (ADR-023)
+      await load()
     } catch (err) {
       await load()
       throw err

@@ -5,5 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 public record CreateRoutineTaskRequest(
         @NotBlank String title,
         String time,
-        String type
+        String type,
+        Boolean isRecurring
 ) {}
