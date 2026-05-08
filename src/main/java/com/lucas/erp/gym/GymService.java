@@ -3,12 +3,16 @@ package com.lucas.erp.gym;
 import com.lucas.erp.gym.dto.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GymService {
@@ -20,16 +24,20 @@ public class GymService {
     // --- WORKOUTS ---
 
     public List<WorkoutDTO> getWorkouts(UUID userId) {
-        return workoutRepository.findByUserId(userId).stream()
+        List<WorkoutDTO> result = workoutRepository.findByUserId(userId).stream()
                 .map(this::toWorkoutDTO)
                 .toList();
+        log.info("getWorkouts userId={} count={}", userId, result.size());
+        return result;
     }
 
     public WorkoutDTO createWorkout(UUID userId, CreateWorkoutRequest req) {
         Workout workout = new Workout();
         workout.setName(req.name());
         workout.setUserId(userId);
-        return toWorkoutDTO(workoutRepository.save(workout));
+        WorkoutDTO dto = toWorkoutDTO(workoutRepository.save(workout));
+        log.info("createWorkout userId={} workoutId={} name={}", userId, dto.id(), req.name());
+        return dto;
     }
 
     @Transactional
@@ -38,14 +46,24 @@ public class GymService {
                 .orElseThrow(() -> new EntityNotFoundException("Workout not found"));
         exerciseRepository.deleteByWorkout_Id(workout.getId());
         workoutRepository.delete(workout);
+        log.info("deleteWorkout userId={} workoutId={}", userId, workoutId);
     }
 
     // --- EXERCISES ---
 
     public List<ExerciseDTO> getExercises(UUID userId) {
-        return exerciseRepository.findByUserId(userId).stream()
+        List<ExerciseDTO> result = exerciseRepository.findByUserId(userId).stream()
                 .map(this::toExerciseDTO)
                 .toList();
+        log.info("getExercises userId={} count={}", userId, result.size());
+        return result;
+    }
+
+    public Page<ExerciseDTO> getExercisesPage(UUID userId, Pageable pageable) {
+        Page<ExerciseDTO> result = exerciseRepository.findByUserId(userId, pageable)
+                .map(this::toExerciseDTO);
+        log.info("getExercisesPage userId={} page={} size={} total={}", userId, pageable.getPageNumber(), pageable.getPageSize(), result.getTotalElements());
+        return result;
     }
 
     public ExerciseDTO createExercise(UUID userId, CreateExerciseRequest req) {
@@ -59,7 +77,9 @@ public class GymService {
         exercise.setReps(req.reps());
         exercise.setRpe(req.rpe());
         exercise.setCanIncreaseNext(req.canIncreaseNext() != null ? req.canIncreaseNext() : false);
-        return toExerciseDTO(exerciseRepository.save(exercise));
+        ExerciseDTO dto = toExerciseDTO(exerciseRepository.save(exercise));
+        log.info("createExercise userId={} exerciseId={} name={}", userId, dto.id(), req.name());
+        return dto;
     }
 
     public ExerciseDTO updateExercise(UUID userId, UUID exerciseId, UpdateExerciseRequest req) {
@@ -70,7 +90,9 @@ public class GymService {
         if (req.reps() != null) exercise.setReps(req.reps());
         if (req.rpe() != null) exercise.setRpe(req.rpe());
         if (req.canIncreaseNext() != null) exercise.setCanIncreaseNext(req.canIncreaseNext());
-        return toExerciseDTO(exerciseRepository.save(exercise));
+        ExerciseDTO dto = toExerciseDTO(exerciseRepository.save(exercise));
+        log.info("updateExercise userId={} exerciseId={}", userId, exerciseId);
+        return dto;
     }
 
     public void deleteExercise(UUID userId, UUID exerciseId) {
@@ -78,6 +100,7 @@ public class GymService {
                 .filter(e -> e.getUserId().equals(userId))
                 .orElseThrow(() -> new EntityNotFoundException("Exercise not found"));
         exerciseRepository.delete(exercise);
+        log.info("deleteExercise userId={} exerciseId={}", userId, exerciseId);
     }
 
     // --- SUPPLEMENTS ---
