@@ -39,3 +39,32 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Environment & Secrets (AIOX)
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Dependencies (AIOX)
+node_modules/
+node_modules
+
+# Build & Logs (AIOX)
+*.log
+logs/
+
+# IDE & OS (AIOX)
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# AIOX & AI Frameworks
+.aiox-core/
+.claude/
+.cursor/
+.gemini/
+.antigravity/
+.codex/
+.github/agents/

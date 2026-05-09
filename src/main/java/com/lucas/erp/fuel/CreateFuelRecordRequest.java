@@ -10,3 +10,4 @@ public record CreateFuelRecordRequest(
         @NotNull @Positive Double odometer,
         String fuelType
 ) {}
+ 
