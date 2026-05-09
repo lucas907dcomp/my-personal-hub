@@ -1,5 +1,7 @@
 import type { Session } from '@supabase/supabase-js'
 
+const BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/, '')
+
 export class ApiError extends Error {
   readonly status: number
   readonly body: string
@@ -29,7 +31,7 @@ export async function apiFetch<T>(
 
   let res: Response
   try {
-    res = await fetch(path, {
+    res = await fetch(`${BASE_URL}${path}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
