@@ -104,7 +104,7 @@ export function ExerciseCard({
 
       {/* Input grid */}
       <div className="grid grid-cols-3 gap-3 mb-2 pl-2">
-        {/* Weight with steppers */}
+        {/* Weight with steppers below value */}
         <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100 transition-all">
           <label
             htmlFor={`weight-${ex.id}`}
@@ -112,33 +112,33 @@ export function ExerciseCard({
           >
             Carga
           </label>
-          <div className="flex items-center gap-1">
+          <div className="flex items-end gap-0.5 mb-1">
+            <input
+              id={`weight-${ex.id}`}
+              type="number"
+              value={ex.weight}
+              onChange={e => onLocalChange(ex.id, 'weight', Number(e.target.value))}
+              onBlur={() => onSave(ex.id)}
+              className="w-full bg-transparent text-slate-800 font-black text-xl focus:outline-none min-w-0"
+            />
+            <span className="text-xs font-bold text-slate-400 mb-0.5 shrink-0">kg</span>
+          </div>
+          <div className="flex justify-between">
             <button
               type="button"
               onClick={() => stepWeight(-2.5)}
               aria-label="Reduzir 2.5 kg"
-              className="text-slate-400 hover:text-orange-500 transition-colors p-0.5 focus:outline-none"
+              className="text-slate-400 hover:text-orange-500 transition-colors px-1 py-0.5 text-[10px] font-bold focus:outline-none flex items-center gap-0.5"
             >
-              <Icon name="minus" size={14} />
+              <Icon name="minus" size={12} />2.5
             </button>
-            <div className="flex items-end gap-0.5 flex-1 min-w-0">
-              <input
-                id={`weight-${ex.id}`}
-                type="number"
-                value={ex.weight}
-                onChange={e => onLocalChange(ex.id, 'weight', Number(e.target.value))}
-                onBlur={() => onSave(ex.id)}
-                className="w-full bg-transparent text-slate-800 font-black text-xl focus:outline-none min-w-0"
-              />
-              <span className="text-xs font-bold text-slate-400 mb-0.5">kg</span>
-            </div>
             <button
               type="button"
               onClick={() => stepWeight(2.5)}
               aria-label="Adicionar 2.5 kg"
-              className="text-slate-400 hover:text-orange-500 transition-colors p-0.5 focus:outline-none"
+              className="text-slate-400 hover:text-orange-500 transition-colors px-1 py-0.5 text-[10px] font-bold focus:outline-none flex items-center gap-0.5"
             >
-              <Icon name="plus" size={14} />
+              2.5<Icon name="plus" size={12} />
             </button>
           </div>
         </div>

@@ -13,17 +13,18 @@ export function AddExerciseForm({ onSubmit, onCancel }: AddExerciseFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name) return
+    if (!name.trim()) return
+    const rpeValue = rpe.trim() === '' ? null : Number(rpe)
     onSubmit({
-      name,
+      name: name.trim(),
       weight: Number(weight),
       reps,
-      rpe: rpe === '' ? null : Number(rpe),
+      rpe: rpeValue,
     })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl card-shadow border border-slate-200 mt-4">
+    <form onSubmit={handleSubmit} noValidate className="bg-white p-6 rounded-3xl card-shadow border border-slate-200 mt-4">
       <h4 className="font-black text-slate-800 mb-5 uppercase tracking-tighter">
         Cadastrar Equipamento
       </h4>
@@ -77,9 +78,8 @@ export function AddExerciseForm({ onSubmit, onCancel }: AddExerciseFormProps) {
             </label>
             <input
               id="exercise-rpe"
-              type="number"
-              min="1"
-              max="10"
+              type="text"
+              inputMode="numeric"
               placeholder="1–10"
               value={rpe}
               onChange={e => setRpe(e.target.value)}

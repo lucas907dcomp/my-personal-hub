@@ -78,8 +78,9 @@ export function useExercises(session: Session) {
       })
       committed.current = [...committed.current, saved]
       setExercises(prev => prev.map(e => e.id === optimistic.id ? saved : e))
-    } catch {
+    } catch (err) {
       setExercises(prev => prev.filter(e => e.id !== optimistic.id))
+      throw err
     }
   }
 

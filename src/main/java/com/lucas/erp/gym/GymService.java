@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -136,7 +137,8 @@ public class GymService {
         session.setUserId(userId);
         session.setExercise(exercise);
         session.setLoggedAt(LocalDateTime.now());
-        session.setWeight(req.weight() != null ? req.weight() : exercise.getWeight());
+        Double rawWeight = req.weight() != null ? req.weight() : exercise.getWeight();
+        session.setWeight(rawWeight != null ? BigDecimal.valueOf(rawWeight) : null);
         session.setReps(req.reps() != null ? req.reps() : exercise.getReps());
         session.setRpe(req.rpe() != null ? req.rpe() : exercise.getRpe());
 

@@ -17,7 +17,7 @@ public record GymSessionDTO(
                 s.getId(),
                 s.getExercise().getId(),
                 s.getLoggedAt(),
-                s.getWeight(),
+                s.getWeight() != null ? s.getWeight().doubleValue() : null,
                 s.getReps(),
                 s.getRpe()
         );

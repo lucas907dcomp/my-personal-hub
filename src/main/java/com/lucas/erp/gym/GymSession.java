@@ -2,6 +2,7 @@ package com.lucas.erp.gym;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -24,7 +25,7 @@ public class GymSession {
     @Column(name = "logged_at", nullable = false)
     private LocalDateTime loggedAt = LocalDateTime.now();
 
-    private Double weight;
+    private BigDecimal weight;
     private String reps;
     private Integer rpe;
 }
