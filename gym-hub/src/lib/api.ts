@@ -36,6 +36,7 @@ export async function apiFetch<T>(
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
+        'ngrok-skip-browser-warning': 'true',
         ...(options?.headers as Record<string, string>),
       },
     })
@@ -50,5 +51,13 @@ export async function apiFetch<T>(
   }
 
   if (res.status === 204) return undefined as T
+
+  const contentType = res.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    const text = await res.text().catch(() => '')
+    console.error(`[API] ${method} ${path} → non-JSON (${contentType})`, text.slice(0, 200))
+    throw new ApiError(res.status, text.slice(0, 200), path, method)
+  }
+
   return res.json() as Promise<T>
 }

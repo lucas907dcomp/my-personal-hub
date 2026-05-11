@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { FuelStatsGrid } from '../components/fuel/FuelStatsGrid'
 import { FuelRuleCard } from '../components/fuel/FuelRuleCard'
@@ -6,7 +7,9 @@ import { FuelRecordCard } from '../components/fuel/FuelRecordCard'
 import { FuelLastTankCard } from '../components/fuel/FuelLastTankCard'
 import { FuelDegradationAlert } from '../components/fuel/FuelDegradationAlert'
 import { FuelMonthlyHistory } from '../components/fuel/FuelMonthlyHistory'
+import { Toast } from '../components/Toast'
 import { useFuelRecords } from '../hooks/useFuelRecords'
+import { ApiError } from '../lib/api'
 import type { FuelType } from '../types/fuel'
 import { calcFuelStats } from '../lib/fuelStats'
 
@@ -16,9 +19,15 @@ interface FuelPageProps {
 
 export function FuelPage({ session }: FuelPageProps) {
   const { records, addRecord, deleteRecord } = useFuelRecords(session)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const stats = calcFuelStats(records)
   const ratioPercentage = (stats.myRatio * 100).toFixed(1)
+
+  const showError = (err: unknown) => {
+    const msg = err instanceof ApiError ? err.userMessage : String(err)
+    setToastMessage(msg)
+  }
 
   const handleAdd = async (
     totalValue: number,
@@ -26,12 +35,20 @@ export function FuelPage({ session }: FuelPageProps) {
     odometer: number,
     fuelType: FuelType,
   ) => {
-    await addRecord({ totalValue, pricePerLiter, odometer, fuelType })
+    try {
+      await addRecord({ totalValue, pricePerLiter, odometer, fuelType })
+    } catch (err) {
+      showError(err)
+    }
   }
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir este registro?')) return
-    await deleteRecord(id)
+    try {
+      await deleteRecord(id)
+    } catch (err) {
+      showError(err)
+    }
   }
 
   return (
@@ -80,6 +97,12 @@ export function FuelPage({ session }: FuelPageProps) {
         </section>
 
       </div>
+
+      <Toast
+        message={toastMessage}
+        onDismiss={() => setToastMessage(null)}
+        variant="error"
+      />
     </div>
   )
 }
