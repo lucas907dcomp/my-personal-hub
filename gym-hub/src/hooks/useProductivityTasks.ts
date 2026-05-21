@@ -1,7 +1,27 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { apiFetch } from '../lib/api'
+import { supabase } from '../lib/supabaseClient'
 import type { RoutineTask, CreateRoutineTask } from '../types/productivity'
+
+type DbTask = {
+  id: string
+  title: string
+  time: string
+  done: boolean
+  type: string
+  is_recurring: boolean
+}
+
+function mapTask(t: DbTask): RoutineTask {
+  return {
+    id: t.id,
+    title: t.title,
+    time: t.time,
+    done: t.done,
+    type: t.type as RoutineTask['type'],
+    isRecurring: t.is_recurring,
+  }
+}
 
 export function useProductivityTasks(session: Session) {
   const [tasks, setTasks] = useState<RoutineTask[]>([])
@@ -9,8 +29,12 @@ export function useProductivityTasks(session: Session) {
 
   const load = useCallback(async () => {
     try {
-      const data = await apiFetch<RoutineTask[]>('/api/v1/productivity/tasks', session)
-      setTasks(data)
+      const { data, error } = await supabase
+        .from('tb_routine_tasks')
+        .select('id, title, time, done, type, is_recurring')
+        .order('time', { ascending: true })
+      if (error) throw new Error(error.message)
+      setTasks((data ?? []).map(mapTask))
     } catch (err) {
       console.error('[useProductivityTasks] load failed:', err)
     } finally {
@@ -21,18 +45,28 @@ export function useProductivityTasks(session: Session) {
   useEffect(() => { load() }, [load])
 
   const addTask = async (payload: CreateRoutineTask): Promise<void> => {
-    const saved = await apiFetch<RoutineTask>('/api/v1/productivity/tasks', session, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
-    setTasks(prev => [...prev, saved].sort((a, b) => a.time.localeCompare(b.time)))
+    const { data, error } = await supabase
+      .from('tb_routine_tasks')
+      .insert({
+        user_id: session.user.id,
+        title: payload.title,
+        time: payload.time,
+        type: payload.type,
+        done: false,
+        is_recurring: payload.isRecurring ?? true,
+      })
+      .select('id, title, time, done, type, is_recurring')
+      .single()
+    if (error) throw new Error(error.message)
+    setTasks(prev => [...prev, mapTask(data)].sort((a, b) => a.time.localeCompare(b.time)))
   }
 
   const deleteTask = async (id: string): Promise<void> => {
     const snapshot = tasks
     setTasks(prev => prev.filter(t => t.id !== id))
     try {
-      await apiFetch<void>(`/api/v1/productivity/tasks/${id}`, session, { method: 'DELETE' })
+      const { error } = await supabase.from('tb_routine_tasks').delete().eq('id', id)
+      if (error) throw new Error(error.message)
     } catch (err) {
       setTasks(snapshot)
       throw err
@@ -40,24 +74,26 @@ export function useProductivityTasks(session: Session) {
   }
 
   const toggleTask = async (id: string): Promise<void> => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t))
+    const task = tasks.find(t => t.id === id)
+    if (!task) return
+    const newDone = !task.done
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: newDone } : t))
     try {
-      const updated = await apiFetch<RoutineTask>(
-        `/api/v1/productivity/tasks/${id}/toggle`,
-        session,
-        { method: 'PUT' },
-      )
-      setTasks(prev => prev.map(t => t.id === id ? updated : t))
+      const { error } = await supabase
+        .from('tb_routine_tasks')
+        .update({ done: newDone })
+        .eq('id', id)
+      if (error) throw new Error(error.message)
     } catch (err) {
-      setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t))
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !newDone } : t))
       throw err
     }
   }
 
   const resetTasks = async (): Promise<void> => {
     try {
-      await apiFetch<void>('/api/v1/productivity/tasks/reset', session, { method: 'POST' })
-      // Reload from server: non-recurring done tasks are deleted by the API (ADR-023)
+      const { error } = await supabase.rpc('reset_daily_routine')
+      if (error) throw new Error(error.message)
       await load()
     } catch (err) {
       await load()

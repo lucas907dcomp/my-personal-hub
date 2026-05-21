@@ -9,7 +9,6 @@ import { FuelDegradationAlert } from '../components/fuel/FuelDegradationAlert'
 import { FuelMonthlyHistory } from '../components/fuel/FuelMonthlyHistory'
 import { Toast } from '../components/Toast'
 import { useFuelRecords } from '../hooks/useFuelRecords'
-import { ApiError } from '../lib/api'
 import type { FuelType } from '../types/fuel'
 import { calcFuelStats } from '../lib/fuelStats'
 
@@ -25,7 +24,7 @@ export function FuelPage({ session }: FuelPageProps) {
   const ratioPercentage = (stats.myRatio * 100).toFixed(1)
 
   const showError = (err: unknown) => {
-    const msg = err instanceof ApiError ? err.userMessage : String(err)
+    const msg = err instanceof Error ? err.message : String(err)
     setToastMessage(msg)
   }
 

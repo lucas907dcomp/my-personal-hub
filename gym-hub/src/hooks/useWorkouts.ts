@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { apiFetch } from '../lib/api'
-import type { Workout, WorkoutDTO } from '../types/gym'
+import { supabase } from '../lib/supabaseClient'
+import type { Workout } from '../types/gym'
 
 export function useWorkouts(session: Session) {
   const [workouts, setWorkouts] = useState<Workout[]>([])
@@ -9,8 +9,12 @@ export function useWorkouts(session: Session) {
 
   const load = useCallback(async () => {
     try {
-      const data = await apiFetch<WorkoutDTO[]>('/api/v1/gym/workouts', session)
-      setWorkouts(data.map(({ id, name, position }) => ({ id, name, position })))
+      const { data, error } = await supabase
+        .from('tb_gym_workouts')
+        .select('id, name, position')
+        .order('position', { ascending: true })
+      if (error) throw new Error(error.message)
+      setWorkouts(data ?? [])
     } catch (err) {
       console.error('[useWorkouts] load failed:', err)
     } finally {
@@ -21,16 +25,18 @@ export function useWorkouts(session: Session) {
   useEffect(() => { load() }, [load])
 
   const addWorkout = async (name: string): Promise<Workout> => {
-    const optimistic: Workout = { id: crypto.randomUUID(), name, position: workouts.length }
+    const position = workouts.length
+    const optimistic: Workout = { id: crypto.randomUUID(), name, position }
     setWorkouts(prev => [...prev, optimistic])
     try {
-      const saved = await apiFetch<WorkoutDTO>('/api/v1/gym/workouts', session, {
-        method: 'POST',
-        body: JSON.stringify({ name }),
-      })
-      const workout: Workout = { id: saved.id, name: saved.name, position: saved.position }
-      setWorkouts(prev => prev.map(w => w.id === optimistic.id ? workout : w))
-      return workout
+      const { data, error } = await supabase
+        .from('tb_gym_workouts')
+        .insert({ name, position, user_id: session.user.id })
+        .select('id, name, position')
+        .single()
+      if (error) throw new Error(error.message)
+      setWorkouts(prev => prev.map(w => w.id === optimistic.id ? data : w))
+      return data
     } catch (err) {
       setWorkouts(prev => prev.filter(w => w.id !== optimistic.id))
       throw err
@@ -41,7 +47,8 @@ export function useWorkouts(session: Session) {
     const snapshot = workouts
     setWorkouts(prev => prev.filter(w => w.id !== id))
     try {
-      await apiFetch<void>(`/api/v1/gym/workouts/${id}`, session, { method: 'DELETE' })
+      const { error } = await supabase.from('tb_gym_workouts').delete().eq('id', id)
+      if (error) throw new Error(error.message)
     } catch (err) {
       setWorkouts(snapshot)
       throw err
@@ -50,16 +57,16 @@ export function useWorkouts(session: Session) {
 
   const reorderWorkouts = async (orderedIds: string[]): Promise<void> => {
     const snapshot = workouts
-    const reordered = orderedIds.map((id, i) => {
+    setWorkouts(orderedIds.map((id, i) => {
       const w = workouts.find(w => w.id === id)!
       return { ...w, position: i }
-    })
-    setWorkouts(reordered)
+    }))
     try {
-      await apiFetch<void>('/api/v1/gym/workouts/order', session, {
-        method: 'PATCH',
-        body: JSON.stringify({ orderedIds }),
-      })
+      await Promise.all(
+        orderedIds.map((id, i) =>
+          supabase.from('tb_gym_workouts').update({ position: i }).eq('id', id)
+        )
+      )
     } catch (err) {
       setWorkouts(snapshot)
       throw err

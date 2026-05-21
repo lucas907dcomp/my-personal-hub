@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { apiFetch } from '../lib/api'
+import { supabase } from '../lib/supabaseClient'
 import type { StreakData } from '../types/productivity'
 
 export function useProductivityStreak(session: Session) {
@@ -8,8 +8,9 @@ export function useProductivityStreak(session: Session) {
 
   const load = useCallback(async () => {
     try {
-      const data = await apiFetch<StreakData>('/api/v1/productivity/streak', session)
-      setStreak(data)
+      const { data, error } = await supabase.rpc('get_streak')
+      if (error) throw error
+      setStreak(data as StreakData)
     } catch {
       // streak is non-critical, fail silently
     }

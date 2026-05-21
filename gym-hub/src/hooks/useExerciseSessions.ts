@@ -1,11 +1,31 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { apiFetch } from '../lib/api'
+import { supabase } from '../lib/supabaseClient'
 import type { GymSession } from '../types/gym'
 
 interface SessionToast {
   msg: string
   variant: 'success' | 'error'
+}
+
+type DbSession = {
+  id: string
+  exercise_id: string
+  logged_at: string
+  weight: number | null
+  reps: string | null
+  rpe: number | null
+}
+
+function mapSession(s: DbSession): GymSession {
+  return {
+    id: s.id,
+    exerciseId: s.exercise_id,
+    loggedAt: s.logged_at,
+    weight: s.weight,
+    reps: s.reps,
+    rpe: s.rpe,
+  }
 }
 
 export function useExerciseSessions(session: Session, exerciseId: string) {
@@ -14,20 +34,35 @@ export function useExerciseSessions(session: Session, exerciseId: string) {
   const [toast, setToast] = useState<SessionToast | null>(null)
 
   useEffect(() => {
-    apiFetch<GymSession>(`/api/v1/gym/exercises/${exerciseId}/sessions/last`, session)
-      .then(s => setLastSession(s))
-      .catch(() => {}) // 404 means no session yet
+    supabase
+      .from('tb_gym_sessions')
+      .select('id, exercise_id, logged_at, weight, reps, rpe')
+      .eq('exercise_id', exerciseId)
+      .order('logged_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setLastSession(mapSession(data))
+      })
   }, [exerciseId, session])
 
   const logSession = async (weight: number | null, reps: string | null, rpe: number | null) => {
     setIsSaving(true)
     try {
-      const saved = await apiFetch<GymSession>(
-        `/api/v1/gym/exercises/${exerciseId}/sessions`,
-        session,
-        { method: 'POST', body: JSON.stringify({ weight, reps, rpe }) },
-      )
-      setLastSession(saved)
+      const { data, error } = await supabase
+        .from('tb_gym_sessions')
+        .insert({
+          user_id: session.user.id,
+          exercise_id: exerciseId,
+          logged_at: new Date().toISOString(),
+          weight,
+          reps,
+          rpe,
+        })
+        .select('id, exercise_id, logged_at, weight, reps, rpe')
+        .single()
+      if (error) throw new Error(error.message)
+      setLastSession(mapSession(data))
       setToast({ msg: 'Sessão registrada! 💪', variant: 'success' })
     } catch {
       setToast({ msg: 'Erro ao salvar sessão.', variant: 'error' })

@@ -13,7 +13,6 @@ import { useWorkouts } from '../hooks/useWorkouts'
 import { useExercises } from '../hooks/useExercises'
 import { useSupplements } from '../hooks/useSupplements'
 import { supabase } from '../lib/supabaseClient'
-import { ApiError } from '../lib/api'
 
 interface GymPageProps {
   session: Session
@@ -50,7 +49,7 @@ export function GymPage({ session }: GymPageProps) {
   }
 
   const showError = (err: unknown) => {
-    const msg = err instanceof ApiError ? err.userMessage : String(err)
+    const msg = err instanceof Error ? err.message : String(err)
     setToastMessage(msg)
   }
 

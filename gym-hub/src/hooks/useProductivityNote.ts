@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { apiFetch } from '../lib/api'
+import { supabase } from '../lib/supabaseClient'
 
 export function useProductivityNote(session: Session) {
   const [content, setContent] = useState('')
@@ -8,27 +8,32 @@ export function useProductivityNote(session: Session) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    apiFetch<{ content: string }>('/api/v1/productivity/notes', session)
-      .then(data => setContent(data.content ?? ''))
-      .catch(err => console.error('[useProductivityNote] load failed:', err))
-      .finally(() => setLoading(false))
+    async function load() {
+      try {
+        const { data, error } = await supabase
+          .from('tb_workspace_notes')
+          .select('content')
+          .eq('user_id', session.user.id)
+          .maybeSingle()
+        if (error) console.error('[useProductivityNote] load failed:', error.message)
+        else setContent(data?.content ?? '')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [session])
 
-  // cleanup timer on unmount
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
 
   const updateContent = useCallback((value: string) => {
     setContent(value)
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(async () => {
-      try {
-        await apiFetch('/api/v1/productivity/notes', session, {
-          method: 'PUT',
-          body: JSON.stringify({ content: value }),
-        })
-      } catch (err) {
-        console.error('[useProductivityNote] save failed:', err)
-      }
+      const { error } = await supabase
+        .from('tb_workspace_notes')
+        .upsert({ user_id: session.user.id, content: value }, { onConflict: 'user_id' })
+      if (error) console.error('[useProductivityNote] save failed:', error.message)
     }, 1000)
   }, [session])
 

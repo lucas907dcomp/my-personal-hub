@@ -1,21 +1,44 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { apiFetch } from '../lib/api'
-import type { Exercise, WorkoutDTO } from '../types/gym'
+import { supabase } from '../lib/supabaseClient'
+import type { Exercise } from '../types/gym'
+
+type DbExercise = {
+  id: string
+  workout_id: string
+  name: string
+  weight: number
+  reps: string
+  rpe: number | null
+  can_increase_next: boolean
+}
+
+function mapEx(e: DbExercise): Exercise {
+  return {
+    id: e.id,
+    workoutId: e.workout_id,
+    name: e.name,
+    weight: e.weight,
+    reps: e.reps,
+    rpe: e.rpe,
+    canIncreaseNext: e.can_increase_next,
+  }
+}
 
 export function useExercises(session: Session) {
   const [exercises, setExercises] = useState<Exercise[]>([])
-  // Tracks the last successfully saved state for each exercise (enables rollback)
   const committed = useRef<Exercise[]>([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     try {
-      // Exercises arrive embedded in workouts — single endpoint, no double-fetch
-      const workouts = await apiFetch<WorkoutDTO[]>('/api/v1/gym/workouts', session)
-      const flat = workouts.flatMap(w => w.exercises)
-      setExercises(flat)
-      committed.current = flat
+      const { data, error } = await supabase
+        .from('tb_gym_exercises')
+        .select('id, workout_id, name, weight, reps, rpe, can_increase_next')
+      if (error) throw new Error(error.message)
+      const mapped = (data ?? []).map(mapEx)
+      setExercises(mapped)
+      committed.current = mapped
     } finally {
       setLoading(false)
     }
@@ -23,47 +46,48 @@ export function useExercises(session: Session) {
 
   useEffect(() => { load() }, [load])
 
-  // Called onChange — updates UI only, no backend call
   const localChange = (id: string, field: string, value: unknown) => {
     setExercises(prev => prev.map(e => e.id === id ? { ...e, [field]: value } : e))
   }
 
-  // Called onBlur — persists to backend, rolls back on error
   const saveExercise = async (id: string) => {
     const ex = exercises.find(e => e.id === id)
     const snap = committed.current.find(e => e.id === id)
     if (!ex || !snap) return
     try {
-      const updated = await apiFetch<Exercise>(`/api/v1/gym/exercises/${id}`, session, {
-        method: 'PUT',
-        body: JSON.stringify({ weight: ex.weight, reps: ex.reps, rpe: ex.rpe, canIncreaseNext: ex.canIncreaseNext }),
-      })
+      const { data, error } = await supabase
+        .from('tb_gym_exercises')
+        .update({ weight: ex.weight, reps: ex.reps, rpe: ex.rpe, can_increase_next: ex.canIncreaseNext })
+        .eq('id', id)
+        .select('id, workout_id, name, weight, reps, rpe, can_increase_next')
+        .single()
+      if (error) throw new Error(error.message)
+      const updated = mapEx(data)
       committed.current = committed.current.map(e => e.id === id ? updated : e)
       setExercises(prev => prev.map(e => e.id === id ? updated : e))
     } catch {
-      // Rollback to last committed value
       setExercises(prev => prev.map(e => e.id === id ? snap : e))
     }
   }
 
-  // Optimistic toggle + immediate persist + rollback on error
   const toggleIncreaseLoad = async (id: string) => {
     const ex = exercises.find(e => e.id === id)
     const snap = committed.current.find(e => e.id === id)
     if (!ex || !snap) return
     const newValue = !ex.canIncreaseNext
-    // 1. Optimistic update
     setExercises(prev => prev.map(e => e.id === id ? { ...e, canIncreaseNext: newValue } : e))
     try {
-      // 2. Persist
-      const updated = await apiFetch<Exercise>(`/api/v1/gym/exercises/${id}`, session, {
-        method: 'PUT',
-        body: JSON.stringify({ weight: ex.weight, reps: ex.reps, rpe: ex.rpe, canIncreaseNext: newValue }),
-      })
+      const { data, error } = await supabase
+        .from('tb_gym_exercises')
+        .update({ weight: ex.weight, reps: ex.reps, rpe: ex.rpe, can_increase_next: newValue })
+        .eq('id', id)
+        .select('id, workout_id, name, weight, reps, rpe, can_increase_next')
+        .single()
+      if (error) throw new Error(error.message)
+      const updated = mapEx(data)
       committed.current = committed.current.map(e => e.id === id ? updated : e)
       setExercises(prev => prev.map(e => e.id === id ? updated : e))
     } catch {
-      // 3. Rollback
       setExercises(prev => prev.map(e => e.id === id ? snap : e))
     }
   }
@@ -72,12 +96,23 @@ export function useExercises(session: Session) {
     const optimistic: Exercise = { ...data, id: crypto.randomUUID() }
     setExercises(prev => [...prev, optimistic])
     try {
-      const saved = await apiFetch<Exercise>('/api/v1/gym/exercises', session, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      })
-      committed.current = [...committed.current, saved]
-      setExercises(prev => prev.map(e => e.id === optimistic.id ? saved : e))
+      const { data: saved, error } = await supabase
+        .from('tb_gym_exercises')
+        .insert({
+          workout_id: data.workoutId,
+          user_id: session.user.id,
+          name: data.name,
+          weight: data.weight,
+          reps: data.reps,
+          rpe: data.rpe,
+          can_increase_next: data.canIncreaseNext ?? false,
+        })
+        .select('id, workout_id, name, weight, reps, rpe, can_increase_next')
+        .single()
+      if (error) throw new Error(error.message)
+      const exercise = mapEx(saved)
+      committed.current = [...committed.current, exercise]
+      setExercises(prev => prev.map(e => e.id === optimistic.id ? exercise : e))
     } catch (err) {
       setExercises(prev => prev.filter(e => e.id !== optimistic.id))
       throw err
@@ -90,7 +125,8 @@ export function useExercises(session: Session) {
     setExercises(prev => prev.filter(e => e.id !== id))
     committed.current = committed.current.filter(e => e.id !== id)
     try {
-      await apiFetch<void>(`/api/v1/gym/exercises/${id}`, session, { method: 'DELETE' })
+      const { error } = await supabase.from('tb_gym_exercises').delete().eq('id', id)
+      if (error) throw new Error(error.message)
     } catch {
       setExercises(snapExercises)
       committed.current = snapCommitted
