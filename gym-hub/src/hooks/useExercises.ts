@@ -145,11 +145,14 @@ export function useExercises(session: Session) {
   }
 
   const reorderExercises = async (orderedIds: string[]) => {
-    // Optimistic update
-    const reordered = exercises.map(e => {
-      const newPos = orderedIds.indexOf(e.id)
-      return newPos !== -1 ? { ...e, position: newPos } : e
-    })
+    // Build a position map for the re-ordered workout's exercises
+    const posMap = new Map(orderedIds.map((id, idx) => [id, idx]))
+
+    // Optimistic update: assign new positions AND sort the full exercises array
+    const reordered = exercises
+      .map(e => posMap.has(e.id) ? { ...e, position: posMap.get(e.id)! } : e)
+      .sort((a, b) => a.position - b.position)
+
     setExercises(reordered)
     committed.current = reordered
     try {

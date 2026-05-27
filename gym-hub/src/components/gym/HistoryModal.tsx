@@ -1,6 +1,32 @@
-import { useEffect } from 'react'
+import { Component, lazy, Suspense, useEffect } from 'react'
 import { useExerciseHistory } from '../../hooks/useExerciseHistory'
-import { ProgressChart } from './ProgressChart'
+
+// Lazy-load recharts via ProgressChart — isolated chunk; errors won't crash the modal
+const ProgressChart = lazy(() =>
+  import('./ProgressChart').then(m => ({ default: m.ProgressChart }))
+)
+
+/** Catches recharts / chunk-load errors so only the chart area fails */
+class ChartErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() { return { hasError: true } }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-40 flex items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-700/50">
+          <p className="text-xs text-slate-400 dark:text-slate-500">Gráfico indisponível</p>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 interface HistoryModalProps {
   exerciseId: string
@@ -69,13 +95,17 @@ export function HistoryModal({ exerciseId, exerciseName, onClose }: HistoryModal
           </button>
         </div>
 
-        {/* Chart */}
+        {/* Chart — recharts isolated in lazy chunk; errors contained to chart area only */}
         {chartData.length >= 2 && (
           <div className="px-5 pb-3 shrink-0">
             <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
               Progressão de Carga
             </p>
-            <ProgressChart data={chartData} />
+            <ChartErrorBoundary>
+              <Suspense fallback={<div className="h-40 bg-slate-100 dark:bg-slate-700 rounded-2xl animate-pulse" />}>
+                <ProgressChart data={chartData} />
+              </Suspense>
+            </ChartErrorBoundary>
           </div>
         )}
 

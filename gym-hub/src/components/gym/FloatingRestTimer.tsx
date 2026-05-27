@@ -40,7 +40,7 @@ export function FloatingRestTimer() {
   const strokeDashoffset = CIRCUMFERENCE * (1 - ringProgress)
 
   return (
-    <div className="fixed bottom-6 right-4 z-40 flex flex-col items-center gap-2 pointer-events-none">
+    <div className="fixed bottom-20 right-4 z-40 flex flex-col items-center gap-2 pointer-events-none">
       {/* Preset chips — visible only when idle */}
       <div
         className={`flex flex-col items-center gap-1.5 transition-all duration-200 pointer-events-auto ${
