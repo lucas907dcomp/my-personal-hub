@@ -2,8 +2,11 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Icon } from './Icon'
 import { RPEBadge } from './RPEBadge'
+import { PRBadge } from './PRBadge'
+import { RestTimerWidget } from './RestTimerWidget'
 import { Toast } from '../Toast'
 import { useExerciseSessions } from '../../hooks/useExerciseSessions'
+import { useRestTimer } from '../../hooks/useRestTimer'
 
 const HistoryModal = lazy(() =>
   import('./HistoryModal').then(m => ({ default: m.HistoryModal }))
@@ -51,8 +54,10 @@ export function ExerciseCard({
   onDelete,
   onToggleIncreaseLoad,
 }: ExerciseCardProps) {
-  const { lastSession, logSession, isSaving, toast, dismissToast } = useExerciseSessions(session, ex.id)
+  const { lastSession, logSession, isSaving, toast, dismissToast, isNewPR } = useExerciseSessions(session, ex.id)
   const [showHistory, setShowHistory] = useState(false)
+  const [showTimer, setShowTimer] = useState(false)
+  const restTimer = useRestTimer(90)
 
   // Debounced save: ensures state is committed before the API call
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -82,6 +87,8 @@ export function ExerciseCard({
 
   const handleSaveSession = () => {
     logSession(ex.weight, ex.reps, ex.rpe)
+    setShowTimer(true)
+    restTimer.start(90)
   }
 
   return (
@@ -94,9 +101,10 @@ export function ExerciseCard({
       )}
 
       <div className="flex justify-between items-start mb-5 pl-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h4 className="font-black text-slate-800 dark:text-slate-100 text-lg uppercase tracking-tight">{ex.name}</h4>
           <RPEBadge value={ex.rpe} />
+          <PRBadge visible={isNewPR} />
         </div>
         <button
           onClick={() => onDelete(ex.id)}
@@ -259,6 +267,14 @@ export function ExerciseCard({
           <Icon name="check" size={16} />
           {isSaving ? 'Salvando...' : 'Salvar Sessão'}
         </button>
+
+        {/* Rest timer */}
+        {showTimer && (
+          <RestTimerWidget
+            timer={restTimer}
+            onDismiss={() => { setShowTimer(false); restTimer.reset() }}
+          />
+        )}
 
         {/* Increase load toggle */}
         <button

@@ -32,6 +32,7 @@ export function useExerciseSessions(session: Session, exerciseId: string) {
   const [lastSession, setLastSession] = useState<GymSession | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [toast, setToast] = useState<SessionToast | null>(null)
+  const [isNewPR, setIsNewPR] = useState(false)
 
   useEffect(() => {
     supabase
@@ -48,7 +49,22 @@ export function useExerciseSessions(session: Session, exerciseId: string) {
 
   const logSession = async (weight: number | null, reps: string | null, rpe: number | null) => {
     setIsSaving(true)
+    setIsNewPR(false)
     try {
+      // Check current max weight BEFORE inserting (PR detection)
+      let maxHistorical: number | null = null
+      if (weight !== null) {
+        const { data: maxData } = await supabase
+          .from('tb_gym_sessions')
+          .select('weight')
+          .eq('exercise_id', exerciseId)
+          .not('weight', 'is', null)
+          .order('weight', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        maxHistorical = maxData?.weight ?? null
+      }
+
       const { data, error } = await supabase
         .from('tb_gym_sessions')
         .insert({
@@ -62,8 +78,15 @@ export function useExerciseSessions(session: Session, exerciseId: string) {
         .select('id, exercise_id, logged_at, weight, reps, rpe')
         .single()
       if (error) throw new Error(error.message)
+
       setLastSession(mapSession(data))
-      setToast({ msg: 'Sessão registrada! 💪', variant: 'success' })
+
+      // PR detection: new weight strictly greater than previous max AND there was a previous session
+      const newPR = weight !== null && maxHistorical !== null && weight > maxHistorical
+      setIsNewPR(newPR)
+
+      const prLabel = newPR ? ' 🏆 Novo PR!' : ''
+      setToast({ msg: `Sessão registrada! 💪${prLabel}`, variant: 'success' })
     } catch {
       setToast({ msg: 'Erro ao salvar sessão.', variant: 'error' })
     } finally {
@@ -73,5 +96,5 @@ export function useExerciseSessions(session: Session, exerciseId: string) {
 
   const dismissToast = () => setToast(null)
 
-  return { lastSession, logSession, isSaving, toast, dismissToast }
+  return { lastSession, logSession, isSaving, toast, dismissToast, isNewPR }
 }
