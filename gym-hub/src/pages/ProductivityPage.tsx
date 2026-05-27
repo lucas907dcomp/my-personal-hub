@@ -169,6 +169,10 @@ export function ProductivityPage({ session }: ProductivityPageProps) {
             loading={loading}
             stats={stats}
             statsLoading={statsLoading}
+            events={events}
+            eventsLoading={agendaLoading}
+            onAddEvent={addEvent}
+            onToggleEvent={toggleEvent}
           />
         )}
         {activeTab === 'day' && (
