@@ -73,7 +73,7 @@ export function ProductivityPage({ session }: ProductivityPageProps) {
   }, [addEvent, showToast])
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} variant="success" />}
 
       <div className="max-w-4xl mx-auto px-4 py-6">
@@ -81,15 +81,15 @@ export function ProductivityPage({ session }: ProductivityPageProps) {
         {/* Header */}
         <header className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-black tracking-tighter text-slate-900 italic uppercase underline decoration-indigo-500 underline-offset-8">
+            <h1 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-slate-50 italic uppercase underline decoration-indigo-500 underline-offset-8">
               Cronograma Diário
             </h1>
             <div className="flex items-center gap-3 mt-2">
-              <p className="text-slate-500 font-medium text-sm tracking-tight">
+              <p className="text-slate-500 dark:text-slate-400 font-medium text-sm tracking-tight">
                 Organize sua rotina diária com foco e consistência.
               </p>
               {streak.currentStreak >= 1 && (
-                <span className="text-sm font-black text-amber-500 bg-amber-50 px-3 py-1 rounded-xl">
+                <span className="text-sm font-black text-amber-500 bg-amber-50 dark:bg-amber-950 px-3 py-1 rounded-xl">
                   🔥 {streak.currentStreak} dia{streak.currentStreak !== 1 ? 's' : ''}
                 </span>
               )}
@@ -101,14 +101,14 @@ export function ProductivityPage({ session }: ProductivityPageProps) {
 
           <div className="flex items-center gap-4">
             {/* Progress ring */}
-            <div className="bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+            <div className="bg-white dark:bg-slate-800 px-5 py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center gap-4">
               <div className="text-right">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Concluído</p>
-                <p className="text-sm font-black text-indigo-600">{progress}%</p>
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter">Concluído</p>
+                <p className="text-sm font-black text-indigo-600 dark:text-indigo-400">{progress}%</p>
               </div>
               <div className="w-12 h-12 relative flex items-center justify-center">
                 <svg className="w-full h-full" viewBox="0 0 36 36">
-                  <circle stroke="#e2e8f0" strokeWidth="3" fill="transparent" r="16" cx="18" cy="18" />
+                  <circle stroke="#e2e8f0" strokeWidth="3" fill="transparent" r="16" cx="18" cy="18" className="dark:[stroke:#334155]" />
                   <circle
                     stroke="#4f46e5"
                     strokeWidth="3"
@@ -127,12 +127,12 @@ export function ProductivityPage({ session }: ProductivityPageProps) {
             {!showResetConfirm ? (
               <button
                 onClick={() => setShowResetConfirm(true)}
-                className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 hover:text-red-500 transition-colors uppercase tracking-widest px-2 focus:outline-none focus:ring-2 focus:ring-red-300 rounded"
+                className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 transition-colors uppercase tracking-widest px-2 focus:outline-none focus:ring-2 focus:ring-red-300 rounded"
               >
                 <Icon name="refresh" size={14} /> Reset Diário
               </button>
             ) : (
-              <div className="flex items-center gap-2 bg-red-50 p-2 rounded-xl border border-red-100">
+              <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950 p-2 rounded-xl border border-red-100 dark:border-red-900">
                 <span className="text-[10px] font-bold text-red-600 uppercase px-1">Certeza?</span>
                 <button onClick={handleReset} className="text-[10px] font-black text-white bg-red-500 px-3 py-1 rounded-lg hover:bg-red-600 transition-all">SIM</button>
                 <button onClick={() => setShowResetConfirm(false)} className="text-[10px] font-bold text-slate-400 hover:text-slate-600 px-1">NÃO</button>
@@ -149,8 +149,8 @@ export function ProductivityPage({ session }: ProductivityPageProps) {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                 activeTab === tab
-                  ? 'bg-slate-900 text-white shadow'
-                  : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200'
+                  ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow'
+                  : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700'
               }`}
             >
               {TAB_LABELS[tab]}

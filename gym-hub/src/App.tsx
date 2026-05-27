@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabaseClient'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { SplashScreen } from './components/SplashScreen'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { GymLayout } from './layouts/GymLayout'
@@ -31,24 +32,26 @@ function App() {
   if (loading) return <SplashScreen />
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route
-          element={
-            <ProtectedRoute session={session}>
-              <GymLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/gym" element={<GymPage session={session!} />} />
-          <Route path="/fuel" element={<FuelPage session={session!} />} />
-          <Route path="/tasks" element={<ProductivityPage session={session!} />} />
-        </Route>
-        <Route path="*" element={<Navigate to={session ? '/gym' : '/login'} replace />} />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route
+            element={
+              <ProtectedRoute session={session}>
+                <GymLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/gym"   element={<GymPage session={session!} />} />
+            <Route path="/fuel"  element={<FuelPage session={session!} />} />
+            <Route path="/tasks" element={<ProductivityPage session={session!} />} />
+          </Route>
+          <Route path="*" element={<Navigate to={session ? '/gym' : '/login'} replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
 

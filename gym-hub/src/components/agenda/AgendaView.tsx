@@ -30,7 +30,7 @@ function formatSectionDate(dateStr: string): string {
 }
 
 function SkeletonCard() {
-  return <div className="animate-pulse bg-slate-100 rounded-3xl h-16" />
+  return <div className="animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl h-16" />
 }
 
 interface SectionProps {
@@ -47,8 +47,8 @@ function AgendaSection({ title, subtitle, events, onToggle, onDelete, onEdit }: 
   return (
     <div>
       <div className="flex items-baseline gap-2 mb-3">
-        <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">{title}</h3>
-        {subtitle && <span className="text-xs text-slate-400">{subtitle}</span>}
+        <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">{title}</h3>
+        {subtitle && <span className="text-xs text-slate-400 dark:text-slate-500">{subtitle}</span>}
       </div>
       <div className="space-y-3">
         {events.map(event => (
@@ -76,11 +76,10 @@ export function AgendaView({ events, loading, onToggle, onDelete, onAdd, onUpdat
   const tomorrow = addDays(today, 1)
   const inSevenDays = addDays(today, 7)
 
-  const todayEvents = events.filter(e => e.event_date === today)
+  const todayEvents    = events.filter(e => e.event_date === today)
   const tomorrowEvents = events.filter(e => e.event_date === tomorrow)
   const thisWeekEvents = events.filter(e => e.event_date > tomorrow && e.event_date <= inSevenDays)
   const upcomingEvents = events.filter(e => e.event_date > inSevenDays)
-
   const hasAnyEvent = events.length > 0
 
   const handleRequestPermission = async () => {
@@ -99,10 +98,12 @@ export function AgendaView({ events, loading, onToggle, onDelete, onAdd, onUpdat
     <div className="space-y-6">
       {/* Notification permission banner */}
       {notificationBanner && (
-        <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-2xl px-4 py-3">
+        <div className="flex items-center justify-between bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-900 rounded-2xl px-4 py-3">
           <div className="flex items-center gap-2">
             <Icon name="bell" size={16} className="text-indigo-500" />
-            <p className="text-sm font-medium text-indigo-700">Ative lembretes para avisos de eventos próximos</p>
+            <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+              Ative lembretes para avisos de eventos próximos
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -113,7 +114,7 @@ export function AgendaView({ events, loading, onToggle, onDelete, onAdd, onUpdat
             </button>
             <button
               onClick={() => setNotificationBanner(false)}
-              className="text-slate-400 hover:text-slate-600"
+              className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
             >
               <Icon name="close" size={16} />
             </button>
@@ -123,13 +124,13 @@ export function AgendaView({ events, loading, onToggle, onDelete, onAdd, onUpdat
 
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3 italic uppercase tracking-tighter">
+        <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3 italic uppercase tracking-tighter">
           <div className="w-2 h-8 bg-indigo-600 rounded-full" />
           Agenda
         </h2>
         <button
           onClick={() => setShowAddModal(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold shadow-lg shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <Icon name="plus" size={16} /> Adicionar Evento
         </button>
@@ -143,60 +144,25 @@ export function AgendaView({ events, loading, onToggle, onDelete, onAdd, onUpdat
         </div>
       ) : !hasAnyEvent ? (
         <div className="text-center py-16">
-          <Icon name="calendar" size={48} className="text-slate-200 mx-auto mb-4" />
-          <p className="text-slate-500 font-medium">Nenhum evento agendado.</p>
-          <p className="text-sm text-slate-400 mt-1">Adicione compromissos importantes para não esquecer nada.</p>
+          <Icon name="calendar" size={48} className="text-slate-200 dark:text-slate-700 mx-auto mb-4" />
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Nenhum evento agendado.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Adicione compromissos importantes para não esquecer nada.</p>
         </div>
       ) : (
         <div className="space-y-8">
-          <AgendaSection
-            title="Hoje"
-            subtitle={formatSectionDate(today)}
-            events={todayEvents}
-            onToggle={onToggle}
-            onDelete={onDelete}
-            onEdit={setEditingEvent}
-          />
-          <AgendaSection
-            title="Amanhã"
-            subtitle={formatSectionDate(tomorrow)}
-            events={tomorrowEvents}
-            onToggle={onToggle}
-            onDelete={onDelete}
-            onEdit={setEditingEvent}
-          />
-          <AgendaSection
-            title="Esta Semana"
-            events={thisWeekEvents}
-            onToggle={onToggle}
-            onDelete={onDelete}
-            onEdit={setEditingEvent}
-          />
-          <AgendaSection
-            title="Próximos"
-            events={upcomingEvents}
-            onToggle={onToggle}
-            onDelete={onDelete}
-            onEdit={setEditingEvent}
-          />
+          <AgendaSection title="Hoje"        subtitle={formatSectionDate(today)}    events={todayEvents}    onToggle={onToggle} onDelete={onDelete} onEdit={setEditingEvent} />
+          <AgendaSection title="Amanhã"      subtitle={formatSectionDate(tomorrow)} events={tomorrowEvents} onToggle={onToggle} onDelete={onDelete} onEdit={setEditingEvent} />
+          <AgendaSection title="Esta Semana"                                        events={thisWeekEvents} onToggle={onToggle} onDelete={onDelete} onEdit={setEditingEvent} />
+          <AgendaSection title="Próximos"                                           events={upcomingEvents} onToggle={onToggle} onDelete={onDelete} onEdit={setEditingEvent} />
         </div>
       )}
 
       {/* Modals */}
       {showAddModal && (
-        <AddEventModal
-          mode="create"
-          onSave={onAdd}
-          onClose={() => setShowAddModal(false)}
-        />
+        <AddEventModal mode="create" onSave={onAdd} onClose={() => setShowAddModal(false)} />
       )}
       {editingEvent && (
-        <AddEventModal
-          mode="edit"
-          initialValues={editingEvent}
-          onSave={handleEditSave}
-          onClose={() => setEditingEvent(null)}
-        />
+        <AddEventModal mode="edit" initialValues={editingEvent} onSave={handleEditSave} onClose={() => setEditingEvent(null)} />
       )}
     </div>
   )
