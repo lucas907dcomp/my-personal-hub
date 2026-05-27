@@ -11,6 +11,8 @@ type DbExercise = {
   reps: string
   rpe: number | null
   can_increase_next: boolean
+  muscle_group: string | null
+  position: number
 }
 
 function mapEx(e: DbExercise): Exercise {
@@ -22,6 +24,8 @@ function mapEx(e: DbExercise): Exercise {
     reps: e.reps,
     rpe: e.rpe,
     canIncreaseNext: e.can_increase_next,
+    muscleGroup: e.muscle_group ?? null,
+    position: e.position ?? 0,
   }
 }
 
@@ -34,7 +38,8 @@ export function useExercises(session: Session) {
     try {
       const { data, error } = await supabase
         .from('tb_gym_exercises')
-        .select('id, workout_id, name, weight, reps, rpe, can_increase_next')
+        .select('id, workout_id, name, weight, reps, rpe, can_increase_next, muscle_group, position')
+        .order('position', { ascending: true })
       if (error) throw new Error(error.message)
       const mapped = (data ?? []).map(mapEx)
       setExercises(mapped)
@@ -59,7 +64,7 @@ export function useExercises(session: Session) {
         .from('tb_gym_exercises')
         .update({ weight: ex.weight, reps: ex.reps, rpe: ex.rpe, can_increase_next: ex.canIncreaseNext })
         .eq('id', id)
-        .select('id, workout_id, name, weight, reps, rpe, can_increase_next')
+        .select('id, workout_id, name, weight, reps, rpe, can_increase_next, muscle_group, position')
         .single()
       if (error) throw new Error(error.message)
       const updated = mapEx(data)
@@ -81,7 +86,7 @@ export function useExercises(session: Session) {
         .from('tb_gym_exercises')
         .update({ weight: ex.weight, reps: ex.reps, rpe: ex.rpe, can_increase_next: newValue })
         .eq('id', id)
-        .select('id, workout_id, name, weight, reps, rpe, can_increase_next')
+        .select('id, workout_id, name, weight, reps, rpe, can_increase_next, muscle_group, position')
         .single()
       if (error) throw new Error(error.message)
       const updated = mapEx(data)
@@ -92,9 +97,13 @@ export function useExercises(session: Session) {
     }
   }
 
-  const addExercise = async (data: Omit<Exercise, 'id'>) => {
-    const optimistic: Exercise = { ...data, id: crypto.randomUUID() }
+  const addExercise = async (data: Omit<Exercise, 'id' | 'position'>) => {
+    const optimistic: Exercise = { ...data, id: crypto.randomUUID(), position: 0 }
     setExercises(prev => [...prev, optimistic])
+    // Calculate next position for ordering
+    const maxPosition = exercises
+      .filter(e => e.workoutId === data.workoutId)
+      .reduce((max, e) => Math.max(max, e.position), -1)
     try {
       const { data: saved, error } = await supabase
         .from('tb_gym_exercises')
@@ -106,8 +115,10 @@ export function useExercises(session: Session) {
           reps: data.reps,
           rpe: data.rpe,
           can_increase_next: data.canIncreaseNext ?? false,
+          muscle_group: data.muscleGroup ?? null,
+          position: maxPosition + 1,
         })
-        .select('id, workout_id, name, weight, reps, rpe, can_increase_next')
+        .select('id, workout_id, name, weight, reps, rpe, can_increase_next, muscle_group, position')
         .single()
       if (error) throw new Error(error.message)
       const exercise = mapEx(saved)
@@ -133,5 +144,25 @@ export function useExercises(session: Session) {
     }
   }
 
-  return { exercises, loading, localChange, saveExercise, toggleIncreaseLoad, addExercise, deleteExercise }
+  const reorderExercises = async (orderedIds: string[]) => {
+    // Optimistic update
+    const reordered = exercises.map(e => {
+      const newPos = orderedIds.indexOf(e.id)
+      return newPos !== -1 ? { ...e, position: newPos } : e
+    })
+    setExercises(reordered)
+    committed.current = reordered
+    try {
+      await Promise.all(
+        orderedIds.map((id, idx) =>
+          supabase.from('tb_gym_exercises').update({ position: idx }).eq('id', id)
+        )
+      )
+    } catch (err) {
+      await load()
+      throw err
+    }
+  }
+
+  return { exercises, loading, localChange, saveExercise, toggleIncreaseLoad, addExercise, deleteExercise, reorderExercises }
 }

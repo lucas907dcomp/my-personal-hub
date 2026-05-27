@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { Icon } from './Icon'
 import { RPEBadge } from './RPEBadge'
 import { PRBadge } from './PRBadge'
+import { MuscleGroupBadge } from './MuscleGroupBadge'
 import { RestTimerWidget } from './RestTimerWidget'
 import { Toast } from '../Toast'
 import { useExerciseSessions } from '../../hooks/useExerciseSessions'
@@ -19,6 +20,7 @@ interface Exercise {
   reps: string
   rpe: number | null
   canIncreaseNext: boolean
+  muscleGroup?: string | null
 }
 
 interface ExerciseCardProps {
@@ -57,6 +59,8 @@ export function ExerciseCard({
   const { lastSession, logSession, isSaving, toast, dismissToast, isNewPR } = useExerciseSessions(session, ex.id)
   const [showHistory, setShowHistory] = useState(false)
   const [showTimer, setShowTimer] = useState(false)
+  const [showNotesInput, setShowNotesInput] = useState(false)
+  const [notesDraft, setNotesDraft] = useState('')
   const restTimer = useRestTimer(90)
 
   // Debounced save: ensures state is committed before the API call
@@ -85,8 +89,10 @@ export function ExerciseCard({
     scheduleSave(ex.id)
   }
 
-  const handleSaveSession = () => {
-    logSession(ex.weight, ex.reps, ex.rpe)
+  const handleSaveSession = (notes: string | null = null) => {
+    logSession(ex.weight, ex.reps, ex.rpe, notes)
+    setShowNotesInput(false)
+    setNotesDraft('')
     setShowTimer(true)
     restTimer.start(90)
   }
@@ -104,6 +110,7 @@ export function ExerciseCard({
         <div className="flex items-center gap-2 flex-wrap">
           <h4 className="font-black text-slate-800 dark:text-slate-100 text-lg uppercase tracking-tight">{ex.name}</h4>
           <RPEBadge value={ex.rpe} />
+          <MuscleGroupBadge value={ex.muscleGroup} />
           <PRBadge visible={isNewPR} />
         </div>
         <button
@@ -254,19 +261,62 @@ export function ExerciseCard({
             {lastSession.reps && ` · ${lastSession.reps}`}
             {lastSession.rpe != null && ` · RPE ${lastSession.rpe}`}
           </p>
+          {lastSession.notes && (
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 italic mt-0.5 line-clamp-1">
+              "{lastSession.notes.length > 60 ? `${lastSession.notes.slice(0, 60)}...` : lastSession.notes}"
+            </p>
+          )}
         </div>
       )}
 
       <div className="pl-2 space-y-3">
-        {/* Save session button (ADR-022) */}
-        <button
-          onClick={handleSaveSession}
-          disabled={isSaving}
-          className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50"
-        >
-          <Icon name="check" size={16} />
-          {isSaving ? 'Salvando...' : 'Salvar Sessão'}
-        </button>
+        {/* Save session — expands notes field before confirming */}
+        {!showNotesInput ? (
+          <button
+            onClick={() => setShowNotesInput(true)}
+            disabled={isSaving}
+            className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50"
+          >
+            <Icon name="check" size={16} />
+            {isSaving ? 'Salvando...' : 'Salvar Sessão'}
+          </button>
+        ) : (
+          <div className="space-y-2">
+            <textarea
+              value={notesDraft}
+              onChange={e => setNotesDraft(e.target.value)}
+              placeholder="Notas opcionais... (dor, energia, ambiente)"
+              rows={2}
+              className="w-full bg-slate-50 dark:bg-slate-700/80 border border-slate-200 dark:border-slate-600 rounded-2xl px-4 py-3 text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/20 transition-all"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => handleSaveSession(null)}
+                disabled={isSaving}
+                className="flex-1 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+              >
+                Sem nota
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSaveSession(notesDraft.trim() || null)}
+                disabled={isSaving}
+                className="flex-1 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest bg-blue-500 text-white hover:bg-blue-600 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
+              >
+                {isSaving ? 'Salvando...' : 'Salvar ✓'}
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setShowNotesInput(false); setNotesDraft('') }}
+              className="w-full text-[10px] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors focus:outline-none"
+            >
+              cancelar
+            </button>
+          </div>
+        )}
 
         {/* Rest timer */}
         {showTimer && (

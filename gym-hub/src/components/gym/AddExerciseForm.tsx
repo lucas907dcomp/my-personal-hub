@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { MUSCLE_GROUPS } from '../../lib/muscleGroups'
 
 interface AddExerciseFormProps {
-  onSubmit: (data: { name: string; weight: number; reps: string; rpe: number | null }) => void
+  onSubmit: (data: { name: string; weight: number; reps: string; rpe: number | null; muscleGroup: string | null }) => void
   onCancel: () => void
 }
 
@@ -10,6 +11,7 @@ export function AddExerciseForm({ onSubmit, onCancel }: AddExerciseFormProps) {
   const [weight, setWeight] = useState('')
   const [reps, setReps] = useState('')
   const [rpe, setRpe] = useState('')
+  const [muscleGroup, setMuscleGroup] = useState<string | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,6 +22,7 @@ export function AddExerciseForm({ onSubmit, onCancel }: AddExerciseFormProps) {
       weight: Number(weight),
       reps,
       rpe: rpeValue,
+      muscleGroup,
     })
   }
 
@@ -32,7 +35,7 @@ export function AddExerciseForm({ onSubmit, onCancel }: AddExerciseFormProps) {
   return (
     <form onSubmit={handleSubmit} noValidate className="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-200 dark:border-slate-700 mt-4">
       <h4 className="font-black text-slate-800 dark:text-slate-100 mb-5 uppercase tracking-tighter">
-        Cadastrar Equipamento
+        Cadastrar Exercício
       </h4>
       <div className="space-y-4 mb-5">
         <div>
@@ -49,6 +52,28 @@ export function AddExerciseForm({ onSubmit, onCancel }: AddExerciseFormProps) {
             className={inputCls}
           />
         </div>
+
+        {/* Muscle group picker */}
+        <div>
+          <p className={labelCls}>Grupo Muscular (opcional)</p>
+          <div className="flex flex-wrap gap-2">
+            {MUSCLE_GROUPS.map(g => (
+              <button
+                key={g.value}
+                type="button"
+                onClick={() => setMuscleGroup(prev => prev === g.value ? null : g.value)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 border ${
+                  muscleGroup === g.value
+                    ? `${g.color} border-transparent scale-105`
+                    : 'bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'
+                }`}
+              >
+                {g.icon} {g.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="flex gap-3">
           <div className="w-1/3">
             <label htmlFor="exercise-weight" className={labelCls}>

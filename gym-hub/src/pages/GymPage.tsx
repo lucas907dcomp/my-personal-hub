@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/gym/Icon'
@@ -14,6 +14,7 @@ import { useWorkouts } from '../hooks/useWorkouts'
 import { useExercises } from '../hooks/useExercises'
 import { useSupplements } from '../hooks/useSupplements'
 import { supabase } from '../lib/supabaseClient'
+import { MUSCLE_GROUPS } from '../lib/muscleGroups'
 
 type GymView = 'workouts' | 'dashboard'
 
@@ -26,13 +27,15 @@ type DeleteTarget = { type: 'workout'; id: string } | { type: 'exercise'; id: st
 export function GymPage({ session }: GymPageProps) {
   const navigate = useNavigate()
   const { workouts, addWorkout, deleteWorkout, reorderWorkouts } = useWorkouts(session)
-  const { exercises, localChange, saveExercise, toggleIncreaseLoad, addExercise, deleteExercise } =
+  const { exercises, localChange, saveExercise, toggleIncreaseLoad, addExercise, deleteExercise, reorderExercises } =
     useExercises(session)
   const { supplements, toggleSupplement } = useSupplements(session)
 
   const [gymView, setGymView] = useState<GymView>('workouts')
   const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null)
   const [isManaging, setIsManaging] = useState(false)
+  const [isReordering, setIsReordering] = useState(false)
+  const [muscleFilter, setMuscleFilter] = useState<string | null>(null)
   const [isAddingExercise, setIsAddingExercise] = useState(false)
   const [newWorkoutName, setNewWorkoutName] = useState('')
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -45,7 +48,24 @@ export function GymPage({ session }: GymPageProps) {
     }
   }, [workouts, activeWorkoutId])
 
+  // Reset filters and reorder mode when switching workouts
+  useEffect(() => {
+    setMuscleFilter(null)
+    setIsReordering(false)
+  }, [activeWorkoutId])
+
   const currentExercises = exercises.filter(e => e.workoutId === activeWorkoutId)
+
+  // Muscle group filter chips — only show groups present in current workout
+  const presentGroups = useMemo(() => {
+    const groups = new Set(currentExercises.map(e => e.muscleGroup).filter(Boolean) as string[])
+    return MUSCLE_GROUPS.filter(g => groups.has(g.value))
+  }, [currentExercises])
+
+  const filteredExercises = useMemo(() => {
+    if (!muscleFilter) return currentExercises
+    return currentExercises.filter(e => e.muscleGroup === muscleFilter)
+  }, [currentExercises, muscleFilter])
 
   // Live volume for current workout: Σ(weight × parseInt(reps)) — integer reps only
   const workoutVolume = currentExercises.reduce((sum, ex) => {
@@ -131,11 +151,26 @@ export function GymPage({ session }: GymPageProps) {
     weight: number
     reps: string
     rpe: number | null
+    muscleGroup: string | null
   }) => {
     if (!activeWorkoutId) return
     try {
       await addExercise({ ...data, workoutId: activeWorkoutId, canIncreaseNext: false })
       setIsAddingExercise(false)
+    } catch (err) {
+      showError(err)
+    }
+  }
+
+  const handleMoveExercise = async (id: string, direction: 'up' | 'down') => {
+    const idx = currentExercises.findIndex(e => e.id === id)
+    if (idx === -1) return
+    const newOrder = [...currentExercises]
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= newOrder.length) return
+    ;[newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]]
+    try {
+      await reorderExercises(newOrder.map(e => e.id))
     } catch (err) {
       showError(err)
     }
@@ -224,6 +259,35 @@ export function GymPage({ session }: GymPageProps) {
                 onMoveWorkout={handleMoveWorkout}
               />
 
+              {/* Muscle group filter chips — only when >1 group present */}
+              {presentGroups.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                  <button
+                    onClick={() => setMuscleFilter(null)}
+                    className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 border ${
+                      muscleFilter === null
+                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent'
+                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    Todos ({currentExercises.length})
+                  </button>
+                  {presentGroups.map(g => (
+                    <button
+                      key={g.value}
+                      onClick={() => setMuscleFilter(prev => prev === g.value ? null : g.value)}
+                      className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 border ${
+                        muscleFilter === g.value
+                          ? `${g.color} border-transparent`
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'
+                      }`}
+                    >
+                      {g.icon} {g.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Live volume bar */}
               {workoutVolumeLabel && (
                 <div className="flex items-center justify-between bg-white dark:bg-slate-800 rounded-2xl px-4 py-2.5 border border-slate-100 dark:border-slate-700">
@@ -240,6 +304,22 @@ export function GymPage({ session }: GymPageProps) {
                 />
               ) : (
                 <div className="space-y-5">
+                  {/* Reorder toggle — only when ≥2 exercises */}
+                  {currentExercises.length > 1 && (
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => setIsReordering(prev => !prev)}
+                        className={`text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                          isReordering
+                            ? 'bg-orange-500 text-white shadow-md'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        {isReordering ? '✓ Concluir' : '⇅ Reordenar'}
+                      </button>
+                    </div>
+                  )}
+
                   {currentExercises.length === 0 ? (
                     <EmptyState
                       icon="dumbbell"
@@ -247,16 +327,39 @@ export function GymPage({ session }: GymPageProps) {
                       description="Clique abaixo para adicionar."
                     />
                   ) : (
-                    currentExercises.map(ex => (
-                      <ExerciseCard
-                        key={ex.id}
-                        exercise={ex}
-                        session={session}
-                        onLocalChange={localChange}
-                        onSave={saveExercise}
-                        onDelete={handleDeleteExercise}
-                        onToggleIncreaseLoad={toggleIncreaseLoad}
-                      />
+                    (isReordering ? currentExercises : filteredExercises).map((ex, idx, arr) => (
+                      <div key={ex.id} className={isReordering ? 'flex items-center gap-2' : ''}>
+                        {isReordering && (
+                          <div className="flex flex-col gap-1 shrink-0">
+                            <button
+                              onClick={() => handleMoveExercise(ex.id, 'up')}
+                              disabled={idx === 0}
+                              aria-label="Mover exercício para cima"
+                              className="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-400 hover:text-orange-500 disabled:opacity-30 transition-colors shadow-sm font-bold text-sm"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              onClick={() => handleMoveExercise(ex.id, 'down')}
+                              disabled={idx === arr.length - 1}
+                              aria-label="Mover exercício para baixo"
+                              className="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-400 hover:text-orange-500 disabled:opacity-30 transition-colors shadow-sm font-bold text-sm"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        )}
+                        <div className={isReordering ? 'flex-1 min-w-0' : ''}>
+                          <ExerciseCard
+                            exercise={ex}
+                            session={session}
+                            onLocalChange={localChange}
+                            onSave={saveExercise}
+                            onDelete={handleDeleteExercise}
+                            onToggleIncreaseLoad={toggleIncreaseLoad}
+                          />
+                        </div>
+                      </div>
                     ))
                   )}
                 </div>

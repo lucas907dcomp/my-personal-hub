@@ -103,8 +103,8 @@ export function HistoryModal({ exerciseId, exerciseName, onClose }: HistoryModal
                   key={s.id}
                   className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 rounded-2xl px-4 py-3 border border-slate-100 dark:border-slate-600"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="text-center min-w-[40px]">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="text-center min-w-[40px] shrink-0">
                       <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase">
                         {formatDate(s.loggedAt)}
                       </p>
@@ -112,7 +112,7 @@ export function HistoryModal({ exerciseId, exerciseName, onClose }: HistoryModal
                         {formatRelative(s.loggedAt)}
                       </p>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       {s.weight !== null && (
                         <p className="font-black text-slate-800 dark:text-slate-100 text-sm">
                           {s.weight} kg
@@ -120,6 +120,11 @@ export function HistoryModal({ exerciseId, exerciseName, onClose }: HistoryModal
                       )}
                       {s.reps && (
                         <p className="text-xs text-slate-500 dark:text-slate-400">{s.reps} reps</p>
+                      )}
+                      {s.notes && (
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 italic mt-0.5 truncate max-w-[160px]">
+                          "{s.notes}"
+                        </p>
                       )}
                     </div>
                   </div>

@@ -7,6 +7,7 @@ export interface SessionPoint {
   weight: number | null
   reps: string | null
   rpe: number | null
+  notes: string | null
 }
 
 function mapSessionPoint(s: {
@@ -15,6 +16,7 @@ function mapSessionPoint(s: {
   weight: number | null
   reps: string | null
   rpe: number | null
+  notes: string | null
 }): SessionPoint {
   return {
     id: s.id,
@@ -22,6 +24,7 @@ function mapSessionPoint(s: {
     weight: s.weight,
     reps: s.reps,
     rpe: s.rpe,
+    notes: s.notes,
   }
 }
 
@@ -37,7 +40,7 @@ export function useExerciseHistory(exerciseId: string, limit = 30) {
     setLoading(true)
     supabase
       .from('tb_gym_sessions')
-      .select('id, logged_at, weight, reps, rpe')
+      .select('id, logged_at, weight, reps, rpe, notes')
       .eq('exercise_id', exerciseId)
       .order('logged_at', { ascending: false })
       .limit(limit)

@@ -12,6 +12,8 @@ export interface Exercise {
   reps: string
   rpe: number | null
   canIncreaseNext: boolean
+  muscleGroup: string | null
+  position: number
 }
 
 export interface GymSession {
@@ -21,6 +23,7 @@ export interface GymSession {
   weight: number | null
   reps: string | null
   rpe: number | null
+  notes: string | null
 }
 
 export interface Supplements {

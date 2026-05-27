@@ -15,6 +15,7 @@ type DbSession = {
   weight: number | null
   reps: string | null
   rpe: number | null
+  notes: string | null
 }
 
 function mapSession(s: DbSession): GymSession {
@@ -25,6 +26,7 @@ function mapSession(s: DbSession): GymSession {
     weight: s.weight,
     reps: s.reps,
     rpe: s.rpe,
+    notes: s.notes,
   }
 }
 
@@ -37,7 +39,7 @@ export function useExerciseSessions(session: Session, exerciseId: string) {
   useEffect(() => {
     supabase
       .from('tb_gym_sessions')
-      .select('id, exercise_id, logged_at, weight, reps, rpe')
+      .select('id, exercise_id, logged_at, weight, reps, rpe, notes')
       .eq('exercise_id', exerciseId)
       .order('logged_at', { ascending: false })
       .limit(1)
@@ -47,7 +49,12 @@ export function useExerciseSessions(session: Session, exerciseId: string) {
       })
   }, [exerciseId, session])
 
-  const logSession = async (weight: number | null, reps: string | null, rpe: number | null) => {
+  const logSession = async (
+    weight: number | null,
+    reps: string | null,
+    rpe: number | null,
+    notes: string | null = null,
+  ) => {
     setIsSaving(true)
     setIsNewPR(false)
     try {
@@ -74,8 +81,9 @@ export function useExerciseSessions(session: Session, exerciseId: string) {
           weight,
           reps,
           rpe,
+          notes,
         })
-        .select('id, exercise_id, logged_at, weight, reps, rpe')
+        .select('id, exercise_id, logged_at, weight, reps, rpe, notes')
         .single()
       if (error) throw new Error(error.message)
 
