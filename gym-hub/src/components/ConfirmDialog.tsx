@@ -42,16 +42,16 @@ export function ConfirmDialog({
       aria-labelledby="confirm-dialog-title"
     >
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
-        <h2 id="confirm-dialog-title" className="font-black text-slate-800 text-lg uppercase tracking-tight mb-2">
+      <div className="relative bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-transparent dark:border-slate-700">
+        <h2 id="confirm-dialog-title" className="font-black text-slate-800 dark:text-slate-100 text-lg uppercase tracking-tight mb-2">
           {title}
         </h2>
-        <p className="text-slate-500 text-sm mb-6">{message}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{message}</p>
         <div className="flex gap-3">
           <button
             ref={cancelRef}
             onClick={onCancel}
-            className="flex-1 py-4 bg-slate-100 text-slate-600 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-colors min-h-[52px]"
+            className="flex-1 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors min-h-[52px]"
           >
             Cancelar
           </button>

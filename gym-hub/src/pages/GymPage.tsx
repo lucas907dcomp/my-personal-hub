@@ -132,7 +132,7 @@ export function GymPage({ session }: GymPageProps) {
       : 'Tem certeza que deseja excluir este exercício?'
 
   return (
-    <div className="min-h-screen bg-slate-50 relative">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 relative transition-colors duration-300">
       <div className="max-w-md mx-auto">
         <header className="gym-gradient text-white p-6 rounded-b-[2.5rem] shadow-lg">
           <div className="flex justify-between items-center mb-6">
@@ -208,7 +208,7 @@ export function GymPage({ session }: GymPageProps) {
           {workouts.length > 0 && !isAddingExercise && (
             <button
               onClick={() => setIsAddingExercise(true)}
-              className="w-full py-5 mt-4 border-2 border-dashed border-slate-300 text-slate-500 rounded-3xl font-black uppercase text-sm tracking-widest flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-slate-400 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full py-5 mt-4 border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-3xl font-black uppercase text-sm tracking-widest flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-500 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <Icon name="plus" /> Novo Exercício
             </button>

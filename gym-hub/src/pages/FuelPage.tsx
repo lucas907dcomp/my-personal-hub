@@ -51,13 +51,13 @@ export function FuelPage({ session }: FuelPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-6 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-6 font-sans transition-colors duration-300">
       <div className="max-w-5xl mx-auto space-y-8">
 
-        <header className="flex justify-between items-end border-b border-slate-700 pb-4">
+        <header className="flex justify-between items-end border-b border-slate-200 dark:border-slate-700 pb-4">
           <div>
-            <h1 className="text-3xl font-bold text-emerald-400">Fuel Hub</h1>
-            <p className="text-slate-400 text-sm mt-1">Analytics de Eficiência Automotiva</p>
+            <h1 className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">Fuel Hub</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Analytics de Eficiência Automotiva</p>
           </div>
         </header>
 
@@ -78,7 +78,7 @@ export function FuelPage({ session }: FuelPageProps) {
         <FuelMonthlyHistory history={stats.monthlyHistory} />
 
         <section>
-          <h2 className="text-xl font-semibold mb-4 text-slate-200">Histórico de Registros</h2>
+          <h2 className="text-xl font-semibold mb-4 text-slate-700 dark:text-slate-200">Histórico de Registros</h2>
           <div className="space-y-3">
             {records.map(record => (
               <FuelRecordCard
@@ -88,7 +88,7 @@ export function FuelPage({ session }: FuelPageProps) {
               />
             ))}
             {records.length === 0 && (
-              <div className="text-center py-10 bg-slate-800/50 rounded-xl border border-dashed border-slate-700">
+              <div className="text-center py-10 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
                 <p className="text-slate-500">Nenhum abastecimento registrado.</p>
               </div>
             )}

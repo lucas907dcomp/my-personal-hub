@@ -20,11 +20,16 @@ export function AddFuelForm({ onAdd }: AddFuelFormProps) {
     setOdometer('')
   }
 
+  const inputCls =
+    'w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-base text-slate-800 dark:text-slate-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-colors'
+
+  const labelCls = 'block text-sm text-slate-600 dark:text-slate-400 mb-1'
+
   return (
-    <form onSubmit={handleSubmit} className="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label htmlFor="fuel-total-value" className="block text-sm text-slate-400 mb-1">
+          <label htmlFor="fuel-total-value" className={labelCls}>
             Valor Total (R$)
           </label>
           <input
@@ -33,12 +38,12 @@ export function AddFuelForm({ onAdd }: AddFuelFormProps) {
             step="0.01"
             value={totalValue}
             onChange={e => setTotalValue(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-base text-slate-100 focus:border-emerald-400 focus:outline-none transition-colors"
+            className={inputCls}
             required
           />
         </div>
         <div>
-          <label htmlFor="fuel-price-per-liter" className="block text-sm text-slate-400 mb-1">
+          <label htmlFor="fuel-price-per-liter" className={labelCls}>
             Preço do Litro (R$)
           </label>
           <input
@@ -47,12 +52,12 @@ export function AddFuelForm({ onAdd }: AddFuelFormProps) {
             step="0.01"
             value={pricePerLiter}
             onChange={e => setPricePerLiter(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-base text-slate-100 focus:border-emerald-400 focus:outline-none transition-colors"
+            className={inputCls}
             required
           />
         </div>
         <div>
-          <label htmlFor="fuel-odometer" className="block text-sm text-slate-400 mb-1">
+          <label htmlFor="fuel-odometer" className={labelCls}>
             Odômetro (km)
           </label>
           <input
@@ -60,19 +65,19 @@ export function AddFuelForm({ onAdd }: AddFuelFormProps) {
             type="number"
             value={odometer}
             onChange={e => setOdometer(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-base text-slate-100 focus:border-emerald-400 focus:outline-none transition-colors"
+            className={inputCls}
             required
           />
         </div>
         <div>
-          <label htmlFor="fuel-type" className="block text-sm text-slate-400 mb-1">
+          <label htmlFor="fuel-type" className={labelCls}>
             Combustível
           </label>
           <select
             id="fuel-type"
             value={fuelType}
             onChange={e => setFuelType(e.target.value as FuelType)}
-            className="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-base text-slate-100 focus:border-emerald-400 focus:outline-none transition-colors"
+            className={inputCls}
           >
             <option value="Gasolina">Gasolina</option>
             <option value="Etanol">Etanol</option>
@@ -82,7 +87,7 @@ export function AddFuelForm({ onAdd }: AddFuelFormProps) {
       <div className="pt-2">
         <button
           type="submit"
-          className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-2.5 px-8 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-8 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400"
         >
           Registrar Abastecimento
         </button>

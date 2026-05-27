@@ -80,7 +80,7 @@ export function ExerciseCard({
   }
 
   return (
-    <div className="bg-white p-6 rounded-3xl card-shadow border border-slate-100 relative overflow-hidden transition-all hover:border-slate-200">
+    <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700 relative overflow-hidden transition-all hover:border-slate-200 dark:hover:border-slate-600">
       {ex.canIncreaseNext && (
         <div
           className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
@@ -90,13 +90,13 @@ export function ExerciseCard({
 
       <div className="flex justify-between items-start mb-5 pl-2">
         <div className="flex items-center gap-2">
-          <h4 className="font-black text-slate-800 text-lg uppercase tracking-tight">{ex.name}</h4>
+          <h4 className="font-black text-slate-800 dark:text-slate-100 text-lg uppercase tracking-tight">{ex.name}</h4>
           <RPEBadge value={ex.rpe} />
         </div>
         <button
           onClick={() => onDelete(ex.id)}
           aria-label={`Excluir exercício ${ex.name}`}
-          className="text-slate-300 hover:text-red-500 transition-colors bg-slate-50 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 transition-colors bg-slate-50 dark:bg-slate-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
           <Icon name="trash" size={16} />
         </button>
@@ -105,10 +105,10 @@ export function ExerciseCard({
       {/* Input grid */}
       <div className="grid grid-cols-3 gap-3 mb-2 pl-2">
         {/* Weight with steppers below value */}
-        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100 transition-all">
+        <div className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-600 focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100 dark:focus-within:ring-orange-900/20 transition-all">
           <label
             htmlFor={`weight-${ex.id}`}
-            className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest"
+            className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-1 tracking-widest"
           >
             Carga
           </label>
@@ -119,9 +119,9 @@ export function ExerciseCard({
               value={ex.weight}
               onChange={e => onLocalChange(ex.id, 'weight', Number(e.target.value))}
               onBlur={() => onSave(ex.id)}
-              className="w-full bg-transparent text-slate-800 font-black text-xl focus:outline-none min-w-0"
+              className="w-full bg-transparent text-slate-800 dark:text-slate-100 font-black text-xl focus:outline-none min-w-0"
             />
-            <span className="text-xs font-bold text-slate-400 mb-0.5 shrink-0">kg</span>
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-0.5 shrink-0">kg</span>
           </div>
           <div className="flex justify-between">
             <button
@@ -144,10 +144,10 @@ export function ExerciseCard({
         </div>
 
         {/* Reps with conditional steppers */}
-        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+        <div className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-600 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 dark:focus-within:ring-blue-900/20 transition-all">
           <label
             htmlFor={`reps-${ex.id}`}
-            className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest"
+            className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-1 tracking-widest"
           >
             Reps
           </label>
@@ -167,7 +167,7 @@ export function ExerciseCard({
                 value={ex.reps}
                 onChange={e => onLocalChange(ex.id, 'reps', e.target.value)}
                 onBlur={() => onSave(ex.id)}
-                className="w-full bg-transparent text-slate-800 font-black text-xl focus:outline-none text-center min-w-0"
+                className="w-full bg-transparent text-slate-800 dark:text-slate-100 font-black text-xl focus:outline-none text-center min-w-0"
               />
               <button
                 type="button"
@@ -185,16 +185,16 @@ export function ExerciseCard({
               value={ex.reps}
               onChange={e => onLocalChange(ex.id, 'reps', e.target.value)}
               onBlur={() => onSave(ex.id)}
-              className="w-full bg-transparent text-slate-800 font-black text-xl lg:text-2xl focus:outline-none"
+              className="w-full bg-transparent text-slate-800 dark:text-slate-100 font-black text-xl lg:text-2xl focus:outline-none"
             />
           )}
         </div>
 
         {/* RPE — optional */}
-        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 focus-within:border-purple-300 focus-within:ring-2 focus-within:ring-purple-100 transition-all">
+        <div className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-600 focus-within:border-purple-300 focus-within:ring-2 focus-within:ring-purple-100 dark:focus-within:ring-purple-900/20 transition-all">
           <label
             htmlFor={`rpe-${ex.id}`}
-            className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest"
+            className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-1 tracking-widest"
           >
             RPE (opcional)
           </label>
@@ -210,14 +210,14 @@ export function ExerciseCard({
               onLocalChange(ex.id, 'rpe', val)
             }}
             onBlur={() => onSave(ex.id)}
-            className="w-full bg-transparent text-slate-800 font-black text-2xl focus:outline-none"
+            className="w-full bg-transparent text-slate-800 dark:text-slate-100 font-black text-2xl focus:outline-none"
           />
         </div>
       </div>
 
       {/* 1RM Epley (ADR-018) */}
       {oneRM !== null && (
-        <p className="pl-2 text-xs font-medium text-slate-400 mb-3">
+        <p className="pl-2 text-xs font-medium text-slate-400 dark:text-slate-500 mb-3">
           ~1RM: {oneRM} kg
         </p>
       )}
@@ -225,8 +225,8 @@ export function ExerciseCard({
       {/* Last session (ADR-022) */}
       {lastSession && (
         <div className="pl-2 mb-3">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Último treino</p>
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Último treino</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
             {formatRelativeTime(lastSession.loggedAt)}
             {lastSession.weight != null && ` · ${lastSession.weight} kg`}
             {lastSession.reps && ` · ${lastSession.reps}`}
@@ -240,7 +240,7 @@ export function ExerciseCard({
         <button
           onClick={handleSaveSession}
           disabled={isSaving}
-          className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 text-blue-600 hover:bg-blue-100 disabled:opacity-50"
+          className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50"
         >
           <Icon name="check" size={16} />
           {isSaving ? 'Salvando...' : 'Salvar Sessão'}
@@ -254,7 +254,7 @@ export function ExerciseCard({
           className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 ${
             ex.canIncreaseNext
               ? 'bg-emerald-500 text-white shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)]'
-              : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+              : 'bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-600'
           }`}
         >
           {ex.canIncreaseNext ? (

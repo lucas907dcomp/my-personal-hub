@@ -38,7 +38,7 @@ export function WorkoutSelector({
           onClick={onToggleManage}
           aria-label="Gerenciar treinos"
           aria-expanded={isManaging}
-          className="bg-slate-100 p-3 rounded-xl hover:bg-slate-200 transition text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="bg-slate-100 dark:bg-slate-700 p-3 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
           <Icon name="settings" size={20} />
         </button>
@@ -48,16 +48,16 @@ export function WorkoutSelector({
         <div
           role="region"
           aria-label="Gerenciar divisão de treino"
-          className="bg-white p-6 rounded-3xl card-shadow border border-slate-100 transition-all"
+          className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all"
         >
-          <h3 className="text-sm font-black text-slate-800 uppercase mb-4 tracking-tighter">
+          <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase mb-4 tracking-tighter">
             Gerenciar Divisão de Treino
           </h3>
           <div className="space-y-3 mb-4">
             {workouts.map((w, idx) => (
               <div
                 key={w.id}
-                className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100"
+                className="flex justify-between items-center bg-slate-50 dark:bg-slate-700 p-3 rounded-xl border border-slate-100 dark:border-slate-600"
               >
                 <div className="flex items-center gap-2">
                   <div className="flex flex-col gap-0.5">
@@ -65,7 +65,7 @@ export function WorkoutSelector({
                       onClick={() => onMoveWorkout(w.id, 'up')}
                       disabled={idx === 0}
                       aria-label={`Mover ${w.name} para cima`}
-                      className="text-slate-400 hover:text-slate-600 disabled:opacity-20 transition-colors p-0.5 focus:outline-none focus:ring-1 focus:ring-orange-500 rounded"
+                      className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-20 transition-colors p-0.5 focus:outline-none focus:ring-1 focus:ring-orange-500 rounded"
                     >
                       ▲
                     </button>
@@ -73,17 +73,17 @@ export function WorkoutSelector({
                       onClick={() => onMoveWorkout(w.id, 'down')}
                       disabled={idx === workouts.length - 1}
                       aria-label={`Mover ${w.name} para baixo`}
-                      className="text-slate-400 hover:text-slate-600 disabled:opacity-20 transition-colors p-0.5 focus:outline-none focus:ring-1 focus:ring-orange-500 rounded"
+                      className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-20 transition-colors p-0.5 focus:outline-none focus:ring-1 focus:ring-orange-500 rounded"
                     >
                       ▼
                     </button>
                   </div>
-                  <span className="font-bold text-slate-700 text-sm">{w.name}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-200 text-sm">{w.name}</span>
                 </div>
                 <button
                   onClick={() => onDeleteWorkout(w.id)}
                   aria-label={`Excluir treino ${w.name}`}
-                  className="text-slate-400 hover:text-red-500 transition-colors p-2 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 bg-white dark:bg-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   <Icon name="trash" size={16} />
                 </button>
@@ -98,7 +98,7 @@ export function WorkoutSelector({
               onChange={e => onNewWorkoutNameChange(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && onAddWorkout()}
               aria-label="Nome do novo treino"
-              className="flex-1 bg-slate-100 rounded-xl px-4 py-3 text-base font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+              className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-xl px-4 py-3 text-base font-medium text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
             />
             <button
               onClick={onAddWorkout}
@@ -120,8 +120,8 @@ export function WorkoutSelector({
               aria-pressed={activeWorkoutId === w.id}
               className={`snap-start whitespace-nowrap px-6 py-4 rounded-2xl font-black text-sm tracking-tighter uppercase transition-all flex-shrink-0 border-2 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
                 activeWorkoutId === w.id
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-lg scale-105'
-                  : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'
+                  ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100 shadow-lg scale-105'
+                  : 'bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-400 border-slate-100 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-500'
               }`}
             >
               {w.name}
@@ -138,7 +138,7 @@ export function WorkoutSelector({
         </div>
         {workouts.length > 1 && (
           <div
-            className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none"
+            className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-slate-50 dark:from-slate-950 to-transparent pointer-events-none"
             aria-hidden="true"
           />
         )}

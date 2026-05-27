@@ -12,31 +12,31 @@ export function FuelStatsGrid({ stats }: FuelStatsGridProps) {
       className="grid grid-cols-2 lg:grid-cols-5 gap-4"
       aria-label="Estatísticas de consumo"
     >
-      <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-        <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-1">Média Global</h3>
-        <p className="text-2xl font-semibold text-white">
-          {stats.avgGlobal} <span className="text-sm font-normal text-slate-400">km/L</span>
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <h3 className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">Média Global</h3>
+        <p className="text-2xl font-semibold text-slate-800 dark:text-white">
+          {stats.avgGlobal} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">km/L</span>
         </p>
       </div>
-      <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-        <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-1">Média Gasolina</h3>
-        <p className="text-2xl font-semibold text-blue-400">
-          {stats.gasAvg} <span className="text-sm font-normal text-slate-400">km/L</span>
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <h3 className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">Média Gasolina</h3>
+        <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
+          {stats.gasAvg} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">km/L</span>
         </p>
       </div>
-      <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-        <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-1">Média Etanol</h3>
-        <p className="text-2xl font-semibold text-green-400">
-          {stats.ethAvg} <span className="text-sm font-normal text-slate-400">km/L</span>
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <h3 className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">Média Etanol</h3>
+        <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
+          {stats.ethAvg} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">km/L</span>
         </p>
       </div>
-      <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-        <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-1">Seu Coeficiente</h3>
-        <p className="text-2xl font-semibold text-amber-400">{ratioPercentage}%</p>
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <h3 className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">Seu Coeficiente</h3>
+        <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400">{ratioPercentage}%</p>
       </div>
-      <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 col-span-2 lg:col-span-1">
-        <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-1">Custo por km</h3>
-        <p className="text-2xl font-semibold text-rose-400">R$ {stats.costPerKm}</p>
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 col-span-2 lg:col-span-1">
+        <h3 className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">Custo por km</h3>
+        <p className="text-2xl font-semibold text-rose-500 dark:text-rose-400">R$ {stats.costPerKm}</p>
       </div>
     </section>
   )
