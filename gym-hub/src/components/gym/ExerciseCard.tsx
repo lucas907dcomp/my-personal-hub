@@ -1,13 +1,11 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Icon } from './Icon'
 import { RPEBadge } from './RPEBadge'
 import { PRBadge } from './PRBadge'
 import { MuscleGroupBadge } from './MuscleGroupBadge'
-import { RestTimerWidget } from './RestTimerWidget'
 import { Toast } from '../Toast'
 import { useExerciseSessions } from '../../hooks/useExerciseSessions'
-import { useRestTimer } from '../../hooks/useRestTimer'
 
 const HistoryModal = lazy(() =>
   import('./HistoryModal').then(m => ({ default: m.HistoryModal }))
@@ -30,6 +28,43 @@ interface ExerciseCardProps {
   onSave: (id: string) => void
   onDelete: (id: string) => void
   onToggleIncreaseLoad: (id: string) => void
+}
+
+/** Catches chunk-load failures and render errors inside HistoryModal */
+class HistoryErrorBoundary extends Component<
+  { children: React.ReactNode; onClose: () => void },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; onClose: () => void }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() { return { hasError: true } }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={this.props.onClose} />
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-8 text-center border-t border-slate-100 dark:border-slate-700">
+            <p className="text-3xl mb-3">📉</p>
+            <p className="font-black text-slate-800 dark:text-slate-100 mb-1 uppercase tracking-tight">
+              Erro ao carregar histórico
+            </p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 mb-5">
+              Verifique sua conexão e tente novamente.
+            </p>
+            <button
+              onClick={this.props.onClose}
+              className="px-8 py-3 bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-600 transition-colors focus:outline-none"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
 }
 
 // Epley 1RM formula: weight * (1 + reps/30), 1 decimal
@@ -58,10 +93,8 @@ export function ExerciseCard({
 }: ExerciseCardProps) {
   const { lastSession, logSession, isSaving, toast, dismissToast, isNewPR } = useExerciseSessions(session, ex.id)
   const [showHistory, setShowHistory] = useState(false)
-  const [showTimer, setShowTimer] = useState(false)
   const [showNotesInput, setShowNotesInput] = useState(false)
   const [notesDraft, setNotesDraft] = useState('')
-  const restTimer = useRestTimer(90)
 
   // Debounced save: ensures state is committed before the API call
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -93,8 +126,6 @@ export function ExerciseCard({
     logSession(ex.weight, ex.reps, ex.rpe, notes)
     setShowNotesInput(false)
     setNotesDraft('')
-    setShowTimer(true)
-    restTimer.start(90)
   }
 
   return (
@@ -318,14 +349,6 @@ export function ExerciseCard({
           </div>
         )}
 
-        {/* Rest timer */}
-        {showTimer && (
-          <RestTimerWidget
-            timer={restTimer}
-            onDismiss={() => { setShowTimer(false); restTimer.reset() }}
-          />
-        )}
-
         {/* Increase load toggle */}
         <button
           onClick={() => onToggleIncreaseLoad(ex.id)}
@@ -355,15 +378,17 @@ export function ExerciseCard({
         />
       )}
 
-      {/* History modal — lazy loaded to keep initial bundle small */}
+      {/* History modal — lazy loaded; ErrorBoundary prevents app-level crash */}
       {showHistory && (
-        <Suspense fallback={null}>
-          <HistoryModal
-            exerciseId={ex.id}
-            exerciseName={ex.name}
-            onClose={() => setShowHistory(false)}
-          />
-        </Suspense>
+        <HistoryErrorBoundary onClose={() => setShowHistory(false)}>
+          <Suspense fallback={null}>
+            <HistoryModal
+              exerciseId={ex.id}
+              exerciseName={ex.name}
+              onClose={() => setShowHistory(false)}
+            />
+          </Suspense>
+        </HistoryErrorBoundary>
       )}
     </div>
   )

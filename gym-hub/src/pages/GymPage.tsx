@@ -7,6 +7,7 @@ import { WorkoutSelector } from '../components/gym/WorkoutSelector'
 import { ExerciseCard } from '../components/gym/ExerciseCard'
 import { AddExerciseForm } from '../components/gym/AddExerciseForm'
 import { GymDashboardView } from '../components/gym/GymDashboardView'
+import { FloatingRestTimer } from '../components/gym/FloatingRestTimer'
 import { EmptyState } from '../components/EmptyState'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Toast } from '../components/Toast'
@@ -66,19 +67,6 @@ export function GymPage({ session }: GymPageProps) {
     if (!muscleFilter) return currentExercises
     return currentExercises.filter(e => e.muscleGroup === muscleFilter)
   }, [currentExercises, muscleFilter])
-
-  // Live volume for current workout: Σ(weight × parseInt(reps)) — integer reps only
-  const workoutVolume = currentExercises.reduce((sum, ex) => {
-    const repsInt = parseInt(ex.reps, 10)
-    if (isNaN(repsInt) || ex.weight <= 0) return sum
-    return sum + ex.weight * repsInt
-  }, 0)
-  const workoutVolumeLabel =
-    workoutVolume > 0
-      ? workoutVolume >= 1000
-        ? `${(workoutVolume / 1000).toFixed(1)} t`
-        : `${Math.round(workoutVolume)} kg`
-      : null
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -289,14 +277,6 @@ export function GymPage({ session }: GymPageProps) {
                 </div>
               )}
 
-              {/* Live volume bar */}
-              {workoutVolumeLabel && (
-                <div className="flex items-center justify-between bg-white dark:bg-slate-800 rounded-2xl px-4 py-2.5 border border-slate-100 dark:border-slate-700">
-                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Volume hoje</p>
-                  <p className="font-black text-orange-500 text-sm">{workoutVolumeLabel}</p>
-                </div>
-              )}
-
               {workouts.length === 0 ? (
                 <EmptyState
                   icon="dumbbell"
@@ -385,6 +365,9 @@ export function GymPage({ session }: GymPageProps) {
           )}
         </main>
       </div>
+
+      {/* Floating rest timer — visible only during workout view */}
+      {gymView === 'workouts' && workouts.length > 0 && <FloatingRestTimer />}
 
       <ConfirmDialog
         isOpen={deleteTarget !== null}
