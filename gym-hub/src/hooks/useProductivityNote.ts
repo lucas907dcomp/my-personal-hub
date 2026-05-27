@@ -5,18 +5,24 @@ import { supabase } from '../lib/supabaseClient'
 export function useProductivityNote(session: Session) {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     async function load() {
       try {
-        const { data, error } = await supabase
+        const { data, error: fetchErr } = await supabase
           .from('tb_workspace_notes')
           .select('content')
           .eq('user_id', session.user.id)
           .maybeSingle()
-        if (error) console.error('[useProductivityNote] load failed:', error.message)
-        else setContent(data?.content ?? '')
+        if (fetchErr) {
+          console.error('[useProductivityNote] load failed:', fetchErr.message)
+          setError(fetchErr.message)
+        } else {
+          setContent(data?.content ?? '')
+          setError(null)
+        }
       } finally {
         setLoading(false)
       }
@@ -37,5 +43,5 @@ export function useProductivityNote(session: Session) {
     }, 1000)
   }, [session])
 
-  return { content, loading, updateContent }
+  return { content, loading, error, updateContent }
 }

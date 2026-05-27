@@ -17,6 +17,11 @@ export type IconName =
   | 'fitness'
   | 'refresh'
   | 'close'
+  | 'pencil'
+  | 'calendar'
+  | 'bell'
+  | 'arrowRight'
+  | 'chart'
 
 interface IconProps {
   name: IconName
@@ -74,6 +79,28 @@ const paths: Record<IconName, React.ReactNode> = {
   fitness: <path d="M18 10V6a2 2 0 00-2-2H8a2 2 0 00-2 2v4a4 4 0 004 4h4a4 4 0 004-4zM7 21h10m-5-7v7" />,
   refresh: <path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5" />,
   close: <path d="M18 6L6 18M6 6l12 12" />,
+  pencil: <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />,
+  calendar: (
+    <>
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </>
+  ),
+  bell: (
+    <>
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
+    </>
+  ),
+  arrowRight: <path d="M5 12h14M12 5l7 7-7 7" />,
+  chart: (
+    <>
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6"  y1="20" x2="6"  y2="14" />
+    </>
+  ),
 }
 
 export function Icon({ name, size = 20, className = '' }: IconProps) {

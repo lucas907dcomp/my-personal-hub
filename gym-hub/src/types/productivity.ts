@@ -1,4 +1,4 @@
-export type TaskType = 'basic' | 'study' | 'career' | 'work' | 'health'
+export type TaskType = 'basic' | 'study' | 'career' | 'work' | 'health' | 'health_medicine'
 
 export interface RoutineTask {
   id: string

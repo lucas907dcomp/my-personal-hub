@@ -1,17 +1,21 @@
 import { useState } from 'react'
 import { Icon } from '../gym/Icon'
-import type { CreateRoutineTask, TaskType } from '../../types/productivity'
+import type { CreateRoutineTask, RoutineTask, TaskType } from '../../types/productivity'
 
 interface AddTaskModalProps {
+  mode?: 'create' | 'edit'
+  initialValues?: RoutineTask
   onAdd: (data: CreateRoutineTask) => void | Promise<void>
   onClose: () => void
 }
 
-export function AddTaskModal({ onAdd, onClose }: AddTaskModalProps) {
-  const [title, setTitle] = useState('')
-  const [time, setTime] = useState('')
-  const [type, setType] = useState<TaskType>('basic')
-  const [isRecurring, setIsRecurring] = useState(true)
+export function AddTaskModal({ mode = 'create', initialValues, onAdd, onClose }: AddTaskModalProps) {
+  const [title, setTitle] = useState(initialValues?.title ?? '')
+  const [time, setTime] = useState(initialValues?.time ?? '')
+  const [type, setType] = useState<TaskType>(initialValues?.type ?? 'basic')
+  const [isRecurring, setIsRecurring] = useState(initialValues?.isRecurring ?? true)
+
+  const isEdit = mode === 'edit'
 
   const handleSubmit = async () => {
     if (!title.trim() || !time) return
@@ -23,7 +27,9 @@ export function AddTaskModal({ onAdd, onClose }: AddTaskModalProps) {
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-[2rem] w-full max-w-md shadow-2xl border border-slate-100">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-black text-slate-800 tracking-tight italic">Nova Tarefa</h3>
+          <h3 className="text-xl font-black text-slate-800 tracking-tight italic">
+            {isEdit ? 'Editar Tarefa' : 'Nova Tarefa'}
+          </h3>
           <button
             onClick={onClose}
             aria-label="Fechar modal"
@@ -76,11 +82,12 @@ export function AddTaskModal({ onAdd, onClose }: AddTaskModalProps) {
                 <option value="career">Carreira</option>
                 <option value="work">Trabalho / Vagas</option>
                 <option value="health">Saúde / Fitness</option>
+                <option value="health_medicine">Saúde / Remédio</option>
               </select>
             </div>
           </div>
 
-          {/* Recurring toggle (ADR-023) */}
+          {/* Recurring toggle */}
           <div className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3 border border-slate-200">
             <div>
               <p className="text-sm font-bold text-slate-700">Tarefa recorrente</p>
@@ -109,7 +116,7 @@ export function AddTaskModal({ onAdd, onClose }: AddTaskModalProps) {
             onClick={handleSubmit}
             className="w-full mt-4 bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            SALVAR NA ROTINA
+            {isEdit ? 'SALVAR ALTERAÇÕES' : 'SALVAR NA ROTINA'}
           </button>
         </div>
       </div>

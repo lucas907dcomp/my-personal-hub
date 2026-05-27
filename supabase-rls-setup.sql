@@ -174,6 +174,47 @@ CREATE TABLE IF NOT EXISTS tb_daily_completions (
 
 CREATE INDEX IF NOT EXISTS idx_daily_completions_user ON tb_daily_completions (user_id, completion_date DESC);
 
+-- ----------------------------
+-- tb_user_settings  (user_id is PK — one row per user)
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS tb_user_settings (
+    user_id         UUID PRIMARY KEY,
+    last_reset_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    timezone        VARCHAR(50) NOT NULL DEFAULT 'America/Sao_Paulo',
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+DROP TRIGGER IF EXISTS trg_user_settings_updated_at ON tb_user_settings;
+CREATE TRIGGER trg_user_settings_updated_at
+    BEFORE UPDATE ON tb_user_settings
+    FOR EACH ROW EXECUTE FUNCTION shared_set_updated_at();
+
+-- ----------------------------
+-- tb_agenda_events
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS tb_agenda_events (
+    id               UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id          UUID         NOT NULL,
+    title            VARCHAR(255) NOT NULL,
+    description      TEXT,
+    event_date       DATE         NOT NULL,
+    event_time       TIME,
+    reminder_minutes INTEGER,
+    completed        BOOLEAN      NOT NULL DEFAULT false,
+    color            VARCHAR(20),
+    created_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    updated_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    CONSTRAINT chk_agenda_reminder CHECK (reminder_minutes IS NULL OR reminder_minutes >= 0)
+);
+
+CREATE INDEX IF NOT EXISTS idx_agenda_events_user_date ON tb_agenda_events (user_id, event_date);
+
+DROP TRIGGER IF EXISTS trg_agenda_events_updated_at ON tb_agenda_events;
+CREATE TRIGGER trg_agenda_events_updated_at
+    BEFORE UPDATE ON tb_agenda_events
+    FOR EACH ROW EXECUTE FUNCTION shared_set_updated_at();
+
 
 -- ============================================================
 -- PART 2 — ROW LEVEL SECURITY
@@ -196,13 +237,17 @@ CREATE POLICY "user_tasks"       ON tb_routine_tasks     FOR ALL USING (auth.uid
 CREATE POLICY "user_notes"       ON tb_workspace_notes   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "user_sessions"    ON tb_gym_sessions      FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "user_completions" ON tb_daily_completions FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+ALTER TABLE tb_user_settings      ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "user_settings"    ON tb_user_settings      FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+ALTER TABLE tb_agenda_events      ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "user_agenda"      ON tb_agenda_events      FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 
 -- ============================================================
 -- PART 3 — RPC FUNCTIONS
 -- ============================================================
 
--- reset_daily_routine(): replaces POST /api/v1/productivity/tasks/reset
+-- reset_daily_routine(): manual reset — também sincroniza last_reset_date em tb_user_settings
 CREATE OR REPLACE FUNCTION reset_daily_routine()
 RETURNS void
 LANGUAGE plpgsql
@@ -231,6 +276,67 @@ BEGIN
 
   DELETE FROM tb_routine_tasks
   WHERE user_id = v_uid AND is_recurring = false AND done = true;
+
+  -- Sincronizar last_reset_date (impede auto-reset disparar novamente hoje)
+  INSERT INTO tb_user_settings (user_id, last_reset_date)
+  VALUES (v_uid, CURRENT_DATE)
+  ON CONFLICT (user_id) DO UPDATE
+    SET last_reset_date = CURRENT_DATE, updated_at = now();
+END;
+$$;
+
+-- check_and_auto_reset(): chamado no mount de useProductivityTasks — idempotente
+CREATE OR REPLACE FUNCTION check_and_auto_reset()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_uid         UUID := auth.uid();
+  v_last_reset  DATE;
+  v_today       DATE := CURRENT_DATE;
+  v_total       INT;
+  v_done        INT;
+  v_pct         INT;
+BEGIN
+  SELECT last_reset_date INTO v_last_reset
+  FROM tb_user_settings WHERE user_id = v_uid;
+
+  -- Primeiro acesso: criar settings com today e não resetar
+  IF v_last_reset IS NULL THEN
+    INSERT INTO tb_user_settings (user_id, last_reset_date)
+    VALUES (v_uid, v_today)
+    ON CONFLICT (user_id) DO NOTHING;
+    RETURN;
+  END IF;
+
+  -- Já resetou hoje → nada a fazer
+  IF v_last_reset >= v_today THEN RETURN; END IF;
+
+  -- Calcular completion% do dia que passou
+  SELECT COUNT(*), COUNT(*) FILTER (WHERE done = true)
+  INTO v_total, v_done
+  FROM tb_routine_tasks WHERE user_id = v_uid;
+
+  v_pct := CASE WHEN v_total > 0 THEN ROUND((v_done::FLOAT / v_total) * 100) ELSE 0 END;
+
+  -- Salvar para o dia anterior (v_last_reset), não para hoje
+  INSERT INTO tb_daily_completions (user_id, completion_date, completion_percentage)
+  VALUES (v_uid, v_last_reset, v_pct)
+  ON CONFLICT (user_id, completion_date) DO UPDATE
+    SET completion_percentage = EXCLUDED.completion_percentage;
+
+  -- Resetar tasks
+  UPDATE tb_routine_tasks SET done = false
+  WHERE user_id = v_uid AND is_recurring = true;
+
+  DELETE FROM tb_routine_tasks
+  WHERE user_id = v_uid AND is_recurring = false AND done = true;
+
+  -- Marcar que resetou hoje
+  UPDATE tb_user_settings
+  SET last_reset_date = v_today, updated_at = now()
+  WHERE user_id = v_uid;
 END;
 $$;
 

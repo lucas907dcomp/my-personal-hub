@@ -1,17 +1,6 @@
 import { Icon } from '../gym/Icon'
+import { getTaskIcon } from '../../lib/taskIcons'
 import type { RoutineTask } from '../../types/productivity'
-
-function getTaskIcon(task: RoutineTask) {
-  if (task.type === 'health') {
-    return task.title.includes('Remédio')
-      ? <Icon name="pill" size={18} className="text-pink-500" />
-      : <Icon name="fitness" size={18} className="text-orange-500" />
-  }
-  if (task.type === 'study') return <Icon name="code" size={18} className="text-blue-500" />
-  if (task.type === 'career') return <Icon name="linkedin" size={18} className="text-emerald-500" />
-  if (task.type === 'work') return <Icon name="briefcase" size={18} className="text-indigo-500" />
-  return <Icon name="clock" size={18} className="text-slate-400" />
-}
 
 interface TaskCardProps {
   task: RoutineTask
@@ -20,6 +9,8 @@ interface TaskCardProps {
   onDeleteRequest: () => void
   onDeleteConfirm: () => void
   onDeleteCancel: () => void
+  onEdit: () => void
+  onDefer?: () => void
 }
 
 export function TaskCard({
@@ -29,6 +20,8 @@ export function TaskCard({
   onDeleteRequest,
   onDeleteConfirm,
   onDeleteCancel,
+  onEdit,
+  onDefer,
 }: TaskCardProps) {
   return (
     <div
@@ -66,7 +59,7 @@ export function TaskCard({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {isConfirming ? (
           <div className="flex items-center gap-2 bg-red-50 p-1 rounded-xl border border-red-100">
             <span className="text-[10px] font-bold text-red-600 uppercase px-2">Excluir?</span>
@@ -87,10 +80,27 @@ export function TaskCard({
           </div>
         ) : (
           <>
+            {onDefer && !task.done && (
+              <button
+                onClick={onDefer}
+                aria-label={`Adiar ${task.title} para amanhã`}
+                title="Adiar para amanhã"
+                className="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-xl transition-all"
+              >
+                <Icon name="arrowRight" size={16} />
+              </button>
+            )}
+            <button
+              onClick={onEdit}
+              aria-label={`Editar tarefa ${task.title}`}
+              className="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-xl transition-all"
+            >
+              <Icon name="pencil" size={16} />
+            </button>
             <button
               onClick={onDeleteRequest}
               aria-label={`Excluir tarefa ${task.title}`}
-              className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+              className="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
             >
               <Icon name="trash" size={18} />
             </button>
