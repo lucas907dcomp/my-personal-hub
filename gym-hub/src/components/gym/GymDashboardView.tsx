@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { useGymStats } from '../../hooks/useGymStats'
+import { BodyWeightTracker } from './BodyWeightTracker'
 import { EmptyState } from '../EmptyState'
 
 interface GymDashboardViewProps {
@@ -133,6 +134,14 @@ export function GymDashboardView({ session }: GymDashboardViewProps) {
           </div>
         </div>
       )}
+
+      {/* Body weight tracker */}
+      <div>
+        <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
+          Peso Corporal
+        </h3>
+        <BodyWeightTracker session={session} />
+      </div>
     </div>
   )
 }

@@ -29,7 +29,7 @@ export function GymPage({ session }: GymPageProps) {
   const { workouts, addWorkout, deleteWorkout, reorderWorkouts } = useWorkouts(session)
   const { exercises, localChange, saveExercise, toggleIncreaseLoad, addExercise, deleteExercise, reorderExercises } =
     useExercises(session)
-  const { supplements, toggleSupplement } = useSupplements(session)
+  const { items: supplementItems, toggle: toggleSupplement, addSupplement, removeSupplement } = useSupplements(session)
 
   const [gymView, setGymView] = useState<GymView>('workouts')
   const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null)
@@ -207,9 +207,10 @@ export function GymPage({ session }: GymPageProps) {
             </button>
           </div>
           <SupplementTracker
-            whey={supplements.whey}
-            creatina={supplements.creatina}
+            items={supplementItems}
             onToggle={toggleSupplement}
+            onAdd={addSupplement}
+            onRemove={removeSupplement}
           />
 
           {/* View tabs */}

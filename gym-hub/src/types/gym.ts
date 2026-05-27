@@ -31,6 +31,23 @@ export interface Supplements {
   creatina: boolean
 }
 
+export interface BodyWeightEntry {
+  id: string
+  date: string       // 'YYYY-MM-DD'
+  weight_kg: number
+  created_at: string
+}
+
+/** Unified supplement item — covers both legacy (whey/creatina) and dynamic configs */
+export interface SupplementItem {
+  id: string                       // 'whey' | 'creatina' | uuid from tb_supplement_config
+  name: string
+  icon: string
+  takenToday: boolean
+  isLegacy: boolean
+  legacyKey?: 'whey' | 'creatina'
+}
+
 // Shape returned by GET /api/v1/gym/workouts (exercises embedded)
 export interface WorkoutDTO extends Workout {
   exercises: Exercise[]
