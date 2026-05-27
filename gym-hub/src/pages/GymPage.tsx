@@ -6,6 +6,7 @@ import { SupplementTracker } from '../components/gym/SupplementTracker'
 import { WorkoutSelector } from '../components/gym/WorkoutSelector'
 import { ExerciseCard } from '../components/gym/ExerciseCard'
 import { AddExerciseForm } from '../components/gym/AddExerciseForm'
+import { GymDashboardView } from '../components/gym/GymDashboardView'
 import { EmptyState } from '../components/EmptyState'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Toast } from '../components/Toast'
@@ -13,6 +14,8 @@ import { useWorkouts } from '../hooks/useWorkouts'
 import { useExercises } from '../hooks/useExercises'
 import { useSupplements } from '../hooks/useSupplements'
 import { supabase } from '../lib/supabaseClient'
+
+type GymView = 'workouts' | 'dashboard'
 
 interface GymPageProps {
   session: Session
@@ -27,6 +30,7 @@ export function GymPage({ session }: GymPageProps) {
     useExercises(session)
   const { supplements, toggleSupplement } = useSupplements(session)
 
+  const [gymView, setGymView] = useState<GymView>('workouts')
   const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null)
   const [isManaging, setIsManaging] = useState(false)
   const [isAddingExercise, setIsAddingExercise] = useState(false)
@@ -159,66 +163,100 @@ export function GymPage({ session }: GymPageProps) {
             creatina={supplements.creatina}
             onToggle={toggleSupplement}
           />
+
+          {/* View tabs */}
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={() => setGymView('workouts')}
+              aria-pressed={gymView === 'workouts'}
+              className={`flex-1 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                gymView === 'workouts'
+                  ? 'bg-white text-slate-900 shadow'
+                  : 'bg-white/15 text-white/80 hover:bg-white/25'
+              }`}
+            >
+              🏋️ Treinos
+            </button>
+            <button
+              onClick={() => setGymView('dashboard')}
+              aria-pressed={gymView === 'dashboard'}
+              className={`flex-1 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                gymView === 'dashboard'
+                  ? 'bg-white text-slate-900 shadow'
+                  : 'bg-white/15 text-white/80 hover:bg-white/25'
+              }`}
+            >
+              📊 Dashboard
+            </button>
+          </div>
         </header>
 
         <main className="p-4 space-y-6 mt-2">
-          <WorkoutSelector
-            workouts={workouts}
-            activeWorkoutId={activeWorkoutId}
-            onSelect={setActiveWorkoutId}
-            isManaging={isManaging}
-            onToggleManage={() => setIsManaging(prev => !prev)}
-            newWorkoutName={newWorkoutName}
-            onNewWorkoutNameChange={setNewWorkoutName}
-            onAddWorkout={handleAddWorkout}
-            onDeleteWorkout={handleDeleteWorkout}
-            onMoveWorkout={handleMoveWorkout}
-          />
+          {gymView === 'dashboard' && (
+            <GymDashboardView session={session} />
+          )}
 
-          {workouts.length === 0 ? (
-            <EmptyState
-              icon="dumbbell"
-              title="Nenhum treino ainda"
-              description="Use o botão acima para criar seu primeiro treino."
-            />
-          ) : (
-            <div className="space-y-5">
-              {currentExercises.length === 0 ? (
+          {gymView === 'workouts' && (
+            <>
+              <WorkoutSelector
+                workouts={workouts}
+                activeWorkoutId={activeWorkoutId}
+                onSelect={setActiveWorkoutId}
+                isManaging={isManaging}
+                onToggleManage={() => setIsManaging(prev => !prev)}
+                newWorkoutName={newWorkoutName}
+                onNewWorkoutNameChange={setNewWorkoutName}
+                onAddWorkout={handleAddWorkout}
+                onDeleteWorkout={handleDeleteWorkout}
+                onMoveWorkout={handleMoveWorkout}
+              />
+
+              {workouts.length === 0 ? (
                 <EmptyState
                   icon="dumbbell"
-                  title="Nenhum exercício neste treino."
-                  description="Clique abaixo para adicionar."
+                  title="Nenhum treino ainda"
+                  description="Use o botão acima para criar seu primeiro treino."
                 />
               ) : (
-                currentExercises.map(ex => (
-                  <ExerciseCard
-                    key={ex.id}
-                    exercise={ex}
-                    session={session}
-                    onLocalChange={localChange}
-                    onSave={saveExercise}
-                    onDelete={handleDeleteExercise}
-                    onToggleIncreaseLoad={toggleIncreaseLoad}
-                  />
-                ))
+                <div className="space-y-5">
+                  {currentExercises.length === 0 ? (
+                    <EmptyState
+                      icon="dumbbell"
+                      title="Nenhum exercício neste treino."
+                      description="Clique abaixo para adicionar."
+                    />
+                  ) : (
+                    currentExercises.map(ex => (
+                      <ExerciseCard
+                        key={ex.id}
+                        exercise={ex}
+                        session={session}
+                        onLocalChange={localChange}
+                        onSave={saveExercise}
+                        onDelete={handleDeleteExercise}
+                        onToggleIncreaseLoad={toggleIncreaseLoad}
+                      />
+                    ))
+                  )}
+                </div>
               )}
-            </div>
-          )}
 
-          {workouts.length > 0 && !isAddingExercise && (
-            <button
-              onClick={() => setIsAddingExercise(true)}
-              className="w-full py-5 mt-4 border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-3xl font-black uppercase text-sm tracking-widest flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-500 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <Icon name="plus" /> Novo Exercício
-            </button>
-          )}
+              {workouts.length > 0 && !isAddingExercise && (
+                <button
+                  onClick={() => setIsAddingExercise(true)}
+                  className="w-full py-5 mt-4 border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-3xl font-black uppercase text-sm tracking-widest flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-500 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <Icon name="plus" /> Novo Exercício
+                </button>
+              )}
 
-          {isAddingExercise && (
-            <AddExerciseForm
-              onSubmit={handleAddExercise}
-              onCancel={() => setIsAddingExercise(false)}
-            />
+              {isAddingExercise && (
+                <AddExerciseForm
+                  onSubmit={handleAddExercise}
+                  onCancel={() => setIsAddingExercise(false)}
+                />
+              )}
+            </>
           )}
         </main>
       </div>
