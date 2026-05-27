@@ -1,9 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Icon } from './Icon'
 import { RPEBadge } from './RPEBadge'
 import { Toast } from '../Toast'
 import { useExerciseSessions } from '../../hooks/useExerciseSessions'
+
+const HistoryModal = lazy(() =>
+  import('./HistoryModal').then(m => ({ default: m.HistoryModal }))
+)
 
 interface Exercise {
   id: string
@@ -48,6 +52,7 @@ export function ExerciseCard({
   onToggleIncreaseLoad,
 }: ExerciseCardProps) {
   const { lastSession, logSession, isSaving, toast, dismissToast } = useExerciseSessions(session, ex.id)
+  const [showHistory, setShowHistory] = useState(false)
 
   // Debounced save: ensures state is committed before the API call
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -225,7 +230,16 @@ export function ExerciseCard({
       {/* Last session (ADR-022) */}
       {lastSession && (
         <div className="pl-2 mb-3">
-          <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Último treino</p>
+          <div className="flex items-center justify-between mb-0.5">
+            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Último treino</p>
+            <button
+              onClick={() => setShowHistory(true)}
+              aria-label={`Ver histórico de ${ex.name}`}
+              className="text-[10px] font-black text-orange-500 hover:text-orange-600 uppercase tracking-widest flex items-center gap-1 transition-colors focus:outline-none"
+            >
+              <Icon name="chart" size={12} /> Histórico
+            </button>
+          </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
             {formatRelativeTime(lastSession.loggedAt)}
             {lastSession.weight != null && ` · ${lastSession.weight} kg`}
@@ -273,6 +287,17 @@ export function ExerciseCard({
           variant={toast.variant}
           onDismiss={dismissToast}
         />
+      )}
+
+      {/* History modal — lazy loaded to keep initial bundle small */}
+      {showHistory && (
+        <Suspense fallback={null}>
+          <HistoryModal
+            exerciseId={ex.id}
+            exerciseName={ex.name}
+            onClose={() => setShowHistory(false)}
+          />
+        </Suspense>
       )}
     </div>
   )
